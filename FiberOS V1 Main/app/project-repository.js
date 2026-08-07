@@ -15,6 +15,8 @@
   var Schema = root.FiberOSSchema;
   var Migrate = root.FiberOSMigrate;
   var KEYS = Migrate.V1_KEYS;
+  // When the user deletes the built-in demo, remember it so it doesn't come back.
+  var DEMO_DISMISSED = 'fiberos_v1_demo_dismissed';
 
   function read(key, fallback) {
     try { var v = JSON.parse(localStorage.getItem(key)); return v == null ? fallback : v; }
@@ -56,11 +58,43 @@
   function getProjects() {
     ensureMigrated();
     var list = read(KEYS.projects, []);
-    if (!Array.isArray(list) || !list.length) return [demoProject()];
+    if (!Array.isArray(list) || !list.length) {
+      // Empty library: show the friendly demo, unless the user deleted it.
+      if (read(DEMO_DISMISSED, false)) return [];
+      return [demoProject()];
+    }
     return list;
   }
 
   function saveProjects(list) { write(KEYS.projects, list); }
+
+  // Permanently dismiss the built-in demo so it stops regenerating.
+  function dismissDemo() { write(DEMO_DISMISSED, true); }
+
+  // Rename a saved design. If the target is the demo (not yet in the real store),
+  // materialize it as a real project so the new name sticks.
+  function rename(id, name) {
+    var nm = String(name == null ? '' : name).trim();
+    if (!nm) return getProjects();
+    var list = read(KEYS.projects, []);
+    if (!Array.isArray(list)) list = [];
+    var i = findIndexById(list, id);
+    if (i >= 0) {
+      list[i].name = nm;
+      list[i].updatedAt = new Date().toISOString();
+      saveProjects(list);
+      return list;
+    }
+    var demo = demoProject();
+    if (String(demo.id) === String(id)) {
+      demo.isDemo = false;
+      demo.name = nm;
+      demo.updatedAt = new Date().toISOString();
+      list.unshift(demo);
+      saveProjects(list);
+    }
+    return list;
+  }
 
   function getActive() { ensureMigrated(); return read(KEYS.active, null); }
   function setActive(project) { write(KEYS.active, project); }
@@ -151,6 +185,8 @@
     setActive: setActive,
     makeActive: makeActive,
     requestOpen: requestOpen,
+    dismissDemo: dismissDemo,
+    rename: rename,
     toLegacyActive: toLegacyActive,
     toggleFavorite: toggleFavorite,
     toggleArchive: toggleArchive,

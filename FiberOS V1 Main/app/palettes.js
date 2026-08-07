@@ -49,6 +49,29 @@
     remove: function(id){ items = items.filter(function(p){ return p.id !== id; }); persist(); return API; },
     clear: function(){ items = []; persist(); return API; },
     exportJSON: function(){ return JSON.stringify({ app:'FiberOS', kind:'palettes', version:1, exportedAt:new Date().toISOString(), palettes: items }, null, 2); },
+    // Restore palettes from a backup. merge:true keeps existing ones; otherwise replaces.
+    importList: function(list, opts){
+      opts = opts || {};
+      if(!Array.isArray(list)) return { added: 0 };
+      if(!opts.merge) items = [];
+      var seen = {}; items.forEach(function(p){ seen[p.id] = 1; });
+      var added = 0;
+      list.forEach(function(p){
+        if(!p || !Array.isArray(p.colors)) return;
+        var id = p.id || makeId();
+        if(seen[id]) id = makeId();
+        items.push({
+          id: id,
+          name: (p.name ? String(p.name) : 'Untitled palette').trim(),
+          status: p.status || 'concept',
+          createdAt: p.createdAt || Date.now(),
+          colors: p.colors,
+          rules: p.rules || {}
+        });
+        seen[id] = 1; added++;
+      });
+      persist(); return { added: added };
+    },
     onChange: function(fn){ if(typeof fn === 'function') subs.push(fn); return API; }
   };
 
