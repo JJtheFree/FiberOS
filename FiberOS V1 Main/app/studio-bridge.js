@@ -216,6 +216,53 @@
     });
   }
 
+  function isInLibrary(id) {
+    if (id == null) return false;
+    var list = readRaw();
+    for (var k = 0; k < list.length; k++) { if (String(list[k].id) === String(id)) return true; }
+    return false;
+  }
+
+  // "Work on this": always save the design into the library first (so it persists and Live
+  // Studio can pin row progress to a stable id), then open Live Studio. Only unsaved editor
+  // work gets a name prompt; designs already in the library go straight in.
+  function installLiveOverride() {
+    var old = $('toLiveBtn');
+    if (!old) return;
+    var neo = old.cloneNode(true);
+    old.parentNode.replaceChild(neo, old);
+    neo.addEventListener('click', function () {
+      if (!(state.gridData && state.gridData.length)) {
+        if (typeof showToast === 'function') showToast('Create a chart before working on it.');
+        return;
+      }
+      var alreadySaved = isInLibrary(window.__fiberosCurrentProjectId);
+      var suggested = ($('saveName') && $('saveName').value.trim())
+        || (state.sourceFileName ? String(state.sourceFileName).replace(/\.[^.]+$/, '').trim() : '')
+        || 'My design';
+      var name;
+      if (alreadySaved) {
+        name = ($('saveName') && $('saveName').value.trim()) || suggested;
+      } else {
+        name = prompt('Name this design to save it, then start working:', suggested);
+        if (name === null) return;                 // cancelled — stay in the editor
+        name = name.trim() || suggested;
+        setVal('saveName', name);
+      }
+      var p = buildV1({
+        name: name,
+        visibility: ($('visibilitySelect') && $('visibilitySelect').value),
+        note: ($('saveNote') && $('saveNote').value)
+      });
+      upsert(p);
+      Repo.makeActive(p);
+      mirrorToLegacyList(p);
+      try { sessionStorage.setItem('fiberos_live_from', 'studio'); } catch (e) {}
+      if (typeof showToast === 'function') showToast('Saved “' + p.name + '”.');
+      location.href = 'live-studio.html';
+    });
+  }
+
   // Mirror into the legacy fiberosProjects list so studio's landing list still shows it.
   function mirrorToLegacyList(p) {
     var legacy;
@@ -245,6 +292,7 @@
   // Boot
   // -------------------------------------------------------------------------
   installSaveOverride();
+  installLiveOverride();
   maybeLoadOnOpen();
   setInterval(syncActive, 5000);
   window.addEventListener('beforeunload', syncActive);
