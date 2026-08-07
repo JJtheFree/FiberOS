@@ -1,0 +1,396 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FiberOS — My Studio</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="fiberos-green.css">
+</head>
+<body>
+  <header class="top">
+    <div class="topin">
+      <a class="brand" href="index.html">FiberOS</a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="my-yarns.html">My Yarns</a>
+      </nav>
+      <div class="spacer"></div>
+      <button class="btn ghost small js-help" type="button">Help</button>
+      <a class="btn" href="studio.html">New pattern</a>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <span class="pill">My Studio</span>
+        <h1>Your saved work</h1>
+        <div class="sub">Your saved designs and color palettes, all in one place.</div>
+      </div>
+      <div class="row">
+        <input id="search" placeholder="Search projects" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)">
+        <select id="sort" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)">
+          <option value="recent">Recently edited</option>
+          <option value="name">Name</option>
+          <option value="size">Largest chart</option>
+        </select>
+      </div>
+    </section>
+
+    <div class="fx-section-head">
+      <h2>Saved designs</h2>
+    </div>
+    <div class="tabs">
+      <button class="tab active" data-filter="all">All</button>
+      <button class="tab" data-filter="favorite">Favorites</button>
+      <button class="tab" data-filter="private">Private</button>
+      <button class="tab" data-filter="public">Public</button>
+    </div>
+    <section id="projects" class="project-grid"></section>
+
+    <div class="fx-section-head">
+      <h2>Saved palettes</h2>
+    </div>
+    <section id="palettes" class="project-grid"></section>
+  </main>
+
+  <footer class="fx-footer">
+    <div class="fx-footin">
+      <div><strong>FiberOS</strong> — a cozy home for fiber projects. Made from a crocheter's frustration, on purpose.</div>
+      <div>Yarn data from <a href="https://temperature-blanket.com/" target="_blank" rel="noopener">temperature-blanket.com</a> (CC BY 4.0). Digital colors are approximate — always check physical yarn and dye lots.</div>
+    </div>
+  </footer>
+
+  <div id="applyOverlay" class="ap-overlay">
+    <div class="ap-panel">
+      <div class="ap-head"><h3 id="apTitle">Apply palette</h3><button class="ap-close" id="apClose" aria-label="Close">×</button></div>
+      <div class="ap-body" id="apBody"></div>
+      <div class="ap-foot" id="apFoot"></div>
+    </div>
+  </div>
+  <style>
+    .ap-overlay{position:fixed;inset:0;background:rgba(20,12,22,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+    .ap-overlay.show{display:flex}
+    .ap-panel{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;max-width:720px;width:100%;max-height:88vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.45);display:flex;flex-direction:column}
+    .ap-head{position:sticky;top:0;background:var(--surface);display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+    .ap-head h3{margin:0}
+    .ap-close{border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:10px;width:34px;height:34px;font-size:1.1rem;cursor:pointer}
+    .ap-body{padding:16px 20px;overflow:auto}
+    .ap-foot{padding:14px 20px;border-top:1px solid var(--line);display:flex;justify-content:flex-end;gap:10px;align-items:center;background:var(--surface)}
+    .ap-pick{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:12px}
+    .ap-pickcard{cursor:pointer;border:1px solid var(--line);border-radius:14px;padding:10px;background:var(--surface2);text-align:left}
+    .ap-pickcard canvas{width:100%;height:auto;border-radius:8px;background:#fff;display:block;margin-bottom:8px}
+    .ap-maprow{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid var(--line)}
+    .ap-dot{width:26px;height:26px;border-radius:7px;border:1px solid rgba(0,0,0,.25);flex:none}
+    .ap-arrow{color:var(--muted);font-weight:800}
+    .ap-cnt{color:var(--muted);font-size:.8rem;width:74px;flex:none}
+    .ap-maprow select{flex:1;min-width:0;padding:7px;border:1px solid var(--line);border-radius:8px;background:var(--surface);color:var(--ink)}
+    .ap-previewwrap{display:flex;justify-content:center}
+    .ap-previewwrap canvas{border:1px solid var(--line);border-radius:12px;background:#fff;max-width:100%;height:auto}
+  </style>
+  <script src="shared.js"></script>
+  <script src="app/sidemenu.js"></script>
+  <script src="app/help.js"></script>
+  <script>
+    window.FiberOSHelp && FiberOSHelp.init({
+      title: 'Home — how this page works',
+      intro: 'Your saved projects and the FiberOS tools live here.',
+      sections: [
+        { h: 'Your projects', p: 'Saved patterns appear as cards. Open in Studio to edit, Pattern packet to print, or use Duplicate, Archive, and Delete. Tap the star to favorite a card, and use the tabs to filter All, Favorites, Private, or Public.' },
+        { h: 'Search and sort', p: 'Search by project name, and sort by recently edited, name, or largest chart.' },
+        { h: 'The tools', p: 'Tapestry Studio turns a photo into an editable crochet chart. Palette Studio builds color schemes grounded in real yarn. My Yarns is your personal stash of yarn you own or want to buy.' },
+        { h: 'Nothing saved yet?', p: 'Click New pattern (or Tapestry Studio) to start your first chart. No account is needed to build and print.' }
+      ]
+    });
+  </script>
+  <script src="app/palettes.js"></script>
+  <script src="app/yarn-weights.js"></script>
+  <script src="app/project-schema.js"></script>
+  <script src="app/project-migrate.js"></script>
+  <script src="app/project-repository.js"></script>
+  <script>
+    var filter = 'all';
+    var root = document.getElementById('projects');
+    var Repo = window.FiberOSRepo;
+
+    function drawThumb(canvas, grid) {
+      if (!grid || !grid.length) return;
+      var ctx = canvas.getContext('2d');
+      var rows = grid.length, cols = grid[0].length;
+      var s = Math.max(2, Math.floor(230 / Math.max(rows, cols)));
+      canvas.width = cols * s; canvas.height = rows * s;
+      for (var y = 0; y < rows; y++)
+        for (var x = 0; x < cols; x++) { ctx.fillStyle = grid[y][x]; ctx.fillRect(x * s, y * s, s, s); }
+    }
+
+    function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+
+    function render() {
+      var list = Repo.getProjects();
+      var q = document.getElementById('search').value.toLowerCase();
+      var v = Repo.view;
+
+      list = list.filter(function (p) { return !p.archived; });
+      list = list.filter(function (p) { return (p.name || '').toLowerCase().indexOf(q) >= 0; });
+      if (filter === 'favorite') list = list.filter(function (p) { return p.favorite; });
+      if (filter === 'private' || filter === 'public') list = list.filter(function (p) { return p.visibility === filter; });
+
+      var sort = document.getElementById('sort').value;
+      if (sort === 'name') list.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
+      if (sort === 'size') list.sort(function (a, b) { return (v.rows(b) * v.stitches(b)) - (v.rows(a) * v.stitches(a)); });
+
+      root.innerHTML = '';
+      if (!list.length) { root.innerHTML = '<div class="empty">No matching projects.</div>'; return; }
+
+      list.forEach(function (p) {
+        var card = document.createElement('article');
+        card.className = 'card project';
+        card.innerHTML =
+          '<div class="thumb"><canvas></canvas></div>' +
+          '<div class="row" style="justify-content:space-between">' +
+            '<h3 style="margin:0">' + esc(p.name || 'Untitled') + '</h3>' +
+            '<button class="btn ghost small fav" title="Favorite">' + (p.favorite ? '★' : '☆') + '</button>' +
+          '</div>' +
+          '<div class="meta"><span>' + v.stitches(p) + ' × ' + v.rows(p) + '</span><span>' + esc(p.visibility || 'private') + '</span></div>' +
+          '<p class="muted">' + esc(v.notes(p) || 'No notes yet.') + '</p>' +
+          '<div class="row">' +
+            '<button class="btn small open">Open in Studio</button>' +
+            '<button class="btn secondary small packet">Pattern packet</button>' +
+            '<button class="btn ghost small duplicate">Duplicate</button>' +
+            '<button class="btn secondary small topalette">Save as palette</button>' +
+            '<button class="btn ghost small archive">Archive</button>' +
+            '<button class="btn danger small delete">Delete</button>' +
+          '</div>';
+        drawThumb(card.querySelector('canvas'), v.grid(p));
+
+        card.querySelector('.open').onclick = function () { Repo.requestOpen(p); location.href = 'studio.html'; };
+        card.querySelector('.packet').onclick = function () { Repo.makeActive(p); location.href = 'pattern-packet.html'; };
+        card.querySelector('.duplicate').onclick = function () { Repo.duplicate(p.id); render(); };
+        card.querySelector('.topalette').onclick = function () { createPaletteFromDesign(p); };
+        card.querySelector('.archive').onclick = function () { Repo.toggleArchive(p.id); render(); };
+        card.querySelector('.delete').onclick = function () {
+          if (!confirm('Delete this project? This cannot be undone.')) return;
+          Repo.remove(p.id); render();
+        };
+        card.querySelector('.fav').onclick = function () { Repo.toggleFavorite(p.id); render(); };
+        root.appendChild(card);
+      });
+    }
+
+    document.getElementById('search').oninput = render;
+    document.getElementById('sort').onchange = render;
+    document.querySelectorAll('.tab').forEach(function (b) {
+      b.onclick = function () {
+        document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
+        b.classList.add('active'); filter = b.dataset.filter; render();
+      };
+    });
+    render();
+
+    // ---- Saved palettes ----
+    var palRoot = document.getElementById('palettes');
+    function renderPalettes() {
+      var Pal = window.FiberOSPalettes;
+      if (!palRoot || !Pal) return;
+      var list = Pal.list();
+      palRoot.innerHTML = '';
+      if (!list.length) {
+        palRoot.innerHTML = '<div class="empty">No saved palettes yet. Build one in <a href="palette-studio.html">Palette Studio</a> and click Save palette.</div>';
+        return;
+      }
+      list.forEach(function (p) {
+        var swatches = p.colors.map(function (c) {
+          return '<span title="' + esc(c.name || c.hex) + '" style="flex:1;min-width:0;height:46px;background:' + esc(c.hex) + '"></span>';
+        }).join('');
+        var statusBadge = p.status === 'ready'
+          ? '<span class="pill" style="background:var(--surface2);color:var(--aub)">Ready to start</span>'
+          : '<span class="pill">Concept</span>';
+        var card = document.createElement('article');
+        card.className = 'card project';
+        card.innerHTML =
+          '<div style="display:flex;border-radius:12px;overflow:hidden;border:1px solid var(--line)">' + swatches + '</div>' +
+          '<div class="row" style="justify-content:space-between;margin-top:10px">' +
+            '<h3 style="margin:0">' + esc(p.name) + '</h3>' + statusBadge +
+          '</div>' +
+          '<p class="muted">' + p.colors.length + ' colors · saved ' + timeAgo(p.createdAt) + '</p>' +
+          '<div class="row">' +
+            '<button class="btn small apply">Apply to a design</button>' +
+            '<button class="btn secondary small export">Export sheet</button>' +
+            '<button class="btn ghost small rename">Rename</button>' +
+            '<button class="btn ghost small del">Delete</button>' +
+          '</div>';
+        card.querySelector('.rename').onclick = function () {
+          var n = prompt('Rename palette:', p.name); if (n === null) return;
+          Pal.rename(p.id, n); renderPalettes();
+        };
+        card.querySelector('.del').onclick = function () {
+          if (!confirm('Delete palette "' + p.name + '"?')) return;
+          Pal.remove(p.id); renderPalettes();
+        };
+        card.querySelector('.export').onclick = function () { exportPaletteSheet(p); };
+        card.querySelector('.apply').onclick = function () { openApply(p); };
+        palRoot.appendChild(card);
+      });
+    }
+    function timeAgo(ts) {
+      if (!ts) return 'recently';
+      var s = Math.floor((Date.now() - ts) / 1000);
+      if (s < 60) return 'just now';
+      if (s < 3600) return Math.floor(s / 60) + ' min ago';
+      if (s < 86400) return Math.floor(s / 3600) + ' h ago';
+      return Math.floor(s / 86400) + ' d ago';
+    }
+    // Export a palette as a clean printable sheet (Save as PDF or print). Each color
+    // shows a swatch, name, brand + line, weight, and hex — a shopping/sharing list.
+    function exportPaletteSheet(p) {
+      var W = window.FiberOSWeights;
+      var cards = p.colors.map(function (c, i) {
+        var wl = W ? W.name(c.weightId) : '';
+        var weight = (wl && wl !== 'Unspecified') ? wl : '';
+        var meta = [c.brandName, c.yarnName].filter(Boolean).join(' &middot; ');
+        return '<div class="pc">' +
+          '<div class="sw" style="background:' + esc(c.hex) + '"></div>' +
+          '<div class="pi">' +
+            '<div class="nm">' + (i + 1) + '. ' + esc(c.name || '(unnamed)') + (c.isBg ? ' <span class="bg">Background</span>' : '') + '</div>' +
+            (meta ? '<div class="mt">' + meta + '</div>' : '') +
+            '<div class="mt">' + (weight ? esc(weight) + ' &middot; ' : '') + esc(String(c.hex).toUpperCase()) + '</div>' +
+          '</div></div>';
+      }).join('');
+      var doc = '<!doctype html><html><head><meta charset="utf-8"><title>' + esc(p.name) + ' — FiberOS palette</title>' +
+        '<style>' +
+        'body{font-family:-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif;color:#1a1a1a;margin:0;padding:36px}' +
+        'h1{margin:0 0 2px;font-size:24px}.sub{color:#666;margin-bottom:22px;font-size:13px}' +
+        '.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}' +
+        '.pc{display:flex;gap:12px;align-items:center;border:1px solid #e3e3e3;border-radius:12px;padding:10px}' +
+        '.sw{width:54px;height:54px;border-radius:10px;border:1px solid rgba(0,0,0,.15);flex:none}' +
+        '.nm{font-weight:700;font-size:14px}.mt{color:#555;font-size:12px;margin-top:2px}' +
+        '.bg{font-size:10px;font-weight:700;background:#efe7f0;color:#7c3a71;border-radius:999px;padding:1px 7px;margin-left:4px}' +
+        '.foot{margin-top:26px;color:#888;font-size:11px;border-top:1px solid #eee;padding-top:12px}' +
+        '@media print{body{padding:16px}.pc{break-inside:avoid}}' +
+        '</style></head><body>' +
+        '<h1>' + esc(p.name) + '</h1><div class="sub">' + p.colors.length + ' colors &middot; FiberOS palette &middot; ' + (p.status === 'ready' ? 'Ready to start' : 'Concept') + '</div>' +
+        '<div class="grid">' + cards + '</div>' +
+        '<div class="foot">Made with FiberOS. Digital colors are approximate — always check the physical yarn and dye lot before buying.</div>' +
+        '<scr' + 'ipt>window.onload=function(){setTimeout(function(){window.print();},300);}</scr' + 'ipt>' +
+        '</body></html>';
+      var w = window.open('', '_blank');
+      if (!w) { alert('Please allow pop-ups to export the palette sheet, or use your browser menu to print this page.'); return; }
+      w.document.open(); w.document.write(doc); w.document.close();
+    }
+    renderPalettes();
+
+    // ---- Apply a palette to a saved design (non-destructive duplicate) ----
+    function hexRgb(h){ h=String(h||'').replace('#',''); if(h.length===3) h=h.split('').map(function(c){return c+c;}).join(''); return [parseInt(h.slice(0,2),16)||0,parseInt(h.slice(2,4),16)||0,parseInt(h.slice(4,6),16)||0]; }
+    function cdist(a,b){ var x=hexRgb(a),y=hexRgb(b); return Math.hypot(x[0]-y[0],x[1]-y[1],x[2]-y[2]); }
+    function distinctColors(grid){ var m={}; (grid||[]).forEach(function(r){ r.forEach(function(c){ var k=String(c).toUpperCase(); m[k]=(m[k]||0)+1; }); }); return Object.keys(m).map(function(k){ return {hex:k,count:m[k]}; }).sort(function(a,b){ return b.count-a.count; }); }
+    function nearestIdx(hex, colors){ var best=0,bd=Infinity; colors.forEach(function(c,i){ var d=cdist(hex,c.hex); if(d<bd){bd=d;best=i;} }); return best; }
+
+    var ap = { pal:null, proj:null, map:{}, view:'pick' };
+    var apOverlay=document.getElementById('applyOverlay');
+    document.getElementById('apClose').onclick=function(){ apOverlay.classList.remove('show'); };
+    apOverlay.addEventListener('click',function(e){ if(e.target===apOverlay) apOverlay.classList.remove('show'); });
+
+    function openApply(pal){ ap.pal=pal; ap.proj=null; ap.map={}; ap.view='pick'; renderApply(); apOverlay.classList.add('show'); }
+
+    function renderApply(){
+      var body=document.getElementById('apBody'), foot=document.getElementById('apFoot'), title=document.getElementById('apTitle');
+      if(ap.view==='pick'){
+        title.textContent='Apply "'+ap.pal.name+'" to which design?';
+        var list=Repo.getProjects().filter(function(p){ return !p.archived; });
+        if(!list.length){ body.innerHTML='<div class="empty">No saved designs yet. Create one in Tapestry Studio first.</div>'; foot.innerHTML=''; return; }
+        body.innerHTML='<div class="ap-pick"></div>';
+        var wrap=body.querySelector('.ap-pick');
+        list.forEach(function(p){
+          var b=document.createElement('button'); b.className='ap-pickcard';
+          b.innerHTML='<canvas></canvas><strong>'+esc(p.name||'Untitled')+'</strong><div class="muted" style="font-size:.8rem">'+Repo.view.stitches(p)+' × '+Repo.view.rows(p)+' · '+distinctColors(Repo.view.grid(p)).length+' colors</div>';
+          drawThumb(b.querySelector('canvas'), Repo.view.grid(p));
+          b.onclick=function(){ ap.proj=p; buildDefaultMap(); ap.view='map'; renderApply(); };
+          wrap.appendChild(b);
+        });
+        foot.innerHTML='';
+      } else if(ap.view==='map'){
+        title.textContent='Match colors';
+        var orig=distinctColors(Repo.view.grid(ap.proj));
+        var pcs=ap.pal.colors;
+        var opts=pcs.map(function(c,i){ return '<option value="'+i+'">'+esc((c.name||'Color')+' · '+String(c.hex).toUpperCase())+'</option>'; }).join('');
+        body.innerHTML='<div class="muted" style="margin-bottom:8px">Each color in your chart becomes a color from the palette. We picked the closest match; change any with the dropdown.</div>'+
+          orig.map(function(o){
+            var pi=ap.map[o.hex];
+            return '<div class="ap-maprow" data-orig="'+o.hex+'">'+
+              '<span class="ap-dot" style="background:'+o.hex+'"></span>'+
+              '<span class="ap-arrow">→</span>'+
+              '<span class="ap-dot ap-chosen" style="background:'+esc(pcs[pi].hex)+'"></span>'+
+              '<span class="ap-cnt">'+o.count+' st</span>'+
+              '<select>'+opts+'</select></div>';
+          }).join('');
+        body.querySelectorAll('.ap-maprow').forEach(function(row){
+          var oh=row.dataset.orig; var sel=row.querySelector('select'); sel.value=ap.map[oh];
+          sel.onchange=function(){ ap.map[oh]=+sel.value; row.querySelector('.ap-chosen').style.background=pcs[+sel.value].hex; };
+        });
+        foot.innerHTML='<button class="btn ghost small" id="apBack">Back</button><button class="btn small" id="apNext">Preview →</button>';
+        document.getElementById('apBack').onclick=function(){ ap.view='pick'; renderApply(); };
+        document.getElementById('apNext').onclick=function(){ ap.view='preview'; renderApply(); };
+      } else if(ap.view==='preview'){
+        title.textContent='Preview the recolored design';
+        body.innerHTML='<div class="ap-previewwrap"><canvas id="apPrev"></canvas></div>';
+        drawThumb(document.getElementById('apPrev'), recolor(Repo.view.grid(ap.proj)));
+        foot.innerHTML='<button class="btn ghost small" id="apBack2">Back</button><button class="btn small" id="apCreate">Create duplicate</button>';
+        document.getElementById('apBack2').onclick=function(){ ap.view='map'; renderApply(); };
+        document.getElementById('apCreate').onclick=createApplied;
+      }
+    }
+
+    function buildDefaultMap(){ ap.map={}; distinctColors(Repo.view.grid(ap.proj)).forEach(function(o){ ap.map[o.hex]=nearestIdx(o.hex, ap.pal.colors); }); }
+    function recolor(grid){ var pcs=ap.pal.colors; return (grid||[]).map(function(r){ return r.map(function(c){ var pi=ap.map[String(c).toUpperCase()]; return (pi!=null && pcs[pi]) ? pcs[pi].hex : c; }); }); }
+    // Build a saved palette FROM a design's own colors + yarn assignments (reverse of Apply).
+    function createPaletteFromDesign(proj){
+      var Pal = window.FiberOSPalettes;
+      if(!Pal){ alert('Palettes are unavailable right now.'); return; }
+      var grid = Repo.view.grid(proj);
+      var distinct = distinctColors(grid);
+      if(!distinct.length){ alert('This design has no colors to save yet.'); return; }
+      var byHex = {};
+      (proj.palette || []).forEach(function(e){ if(e && e.chartHex) byHex[String(e.chartHex).toUpperCase()] = e; });
+      var colors = distinct.map(function(o, i){
+        var e = byHex[o.hex] || null;
+        var rgb = hexRgb(o.hex);
+        var isBg = rgb && rgb[0] >= 246 && rgb[1] >= 246 && rgb[2] >= 246;
+        var y = (e && e.yarn) ? e.yarn : null;
+        var nm = (e && e.displayName && e.displayName !== 'Color') ? e.displayName : (isBg ? 'Background' : 'Color ' + (i + 1));
+        return { name: nm, hex: o.hex,
+          brandName: (y && y.brandName) || '', yarnName: (y && y.yarnName) || '',
+          weightId: (y && y.weightId) || '', href: (y && y.href) || '', isBg: !!isBg };
+      });
+      var def = (proj.name || 'Design') + ' palette';
+      var name = prompt('Name this palette:', def);
+      if(name === null) return;
+      Pal.save({ name: (name || def), colors: colors, status: 'concept', rules: { source: 'design', designId: proj.id } });
+      renderPalettes();
+      var sec = document.getElementById('palettes'); if(sec) sec.scrollIntoView({ behavior: 'smooth' });
+      alert('Saved "' + (name || def) + '" to your palettes (' + colors.length + ' colors).');
+    }
+
+    function nextDupName(base){ base=base||'Untitled'; var names=Repo.getProjects().map(function(p){return p.name;}); var n=2; while(names.indexOf(base+' '+n)>=0) n++; return base+' '+n; }
+
+    function createApplied(){
+      var list=Repo.getProjects();
+      var copy=JSON.parse(JSON.stringify(ap.proj));
+      copy.id='proj_'+Date.now().toString(36)+Math.random().toString(36).slice(2,6);
+      copy.isDemo=false; copy.name=nextDupName(ap.proj.name);
+      copy.createdAt=new Date().toISOString(); copy.updatedAt=copy.createdAt;
+      var newGrid=recolor(Repo.view.grid(copy));
+      if(copy.chart) copy.chart.grid=newGrid; else copy.chart={grid:newGrid};
+      var used={}; newGrid.forEach(function(r){ r.forEach(function(c){ var k=String(c).toUpperCase(); used[k]=(used[k]||0)+1; }); });
+      copy.palette=Object.keys(used).map(function(hex){
+        var pc=ap.pal.colors.filter(function(c){ return String(c.hex).toUpperCase()===hex; })[0];
+        return { chartHex:hex, displayName: pc?(pc.name||'Color'):'Color', stitchCount:used[hex],
+          yarn: pc?{ brandName:pc.brandName, yarnName:pc.yarnName, weightId:pc.weightId, href:pc.href }:null };
+      });
+      list.unshift(copy); Repo.saveProjects(list);
+      apOverlay.classList.remove('show'); render(); renderPalettes();
+      alert('Created "'+copy.name+'" in Saved designs with your palette colors.');
+    }
+  </script>
+</body>
+</html>

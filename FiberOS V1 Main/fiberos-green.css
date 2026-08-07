@@ -1,0 +1,380 @@
+/* ==========================================================================
+   FiberOS — Green Design System (Phase 2)
+   --------------------------------------------------------------------------
+   ONE stylesheet that re-skins the whole suite to the green identity.
+   Load it AFTER the page's own styles (shared.css or studio's inline <style>)
+   so these values win.
+
+   Two styling systems exist in the app, with different variable names:
+     - shared.css pages (home, packet, yarn):  --aub, --plum, --pink, --coral, --surface2 ...
+     - studio.html (self-contained):           --aubergine, --plum, --magenta, --lilac, --gold, --surface-2 ...
+   We override BOTH so the palette is consistent from a single file.
+
+   Palette
+     Core greens   forest #20482F   hunter #2F6F48 (primary)   sage #E6EFE3 / #8FAE97
+     Accents       burnt orange #B5631D   lavender #B9A3E0   periwinkle #7F88CF
+     No mint, anywhere.
+   ========================================================================== */
+
+/* ---- LIGHT THEME ---------------------------------------------------------- */
+:root {
+  /* shared.css variable names */
+  --bg: #f4f1e8;
+  --surface: #fffdfa;
+  --surface2: #e6efe3;
+  --ink: #1d2a22;
+  --muted: #5b6a60;
+  --aub: #2f6f48;      /* primary brand green (hunter) */
+  --plum: #20482f;     /* deeper forest */
+  --pink: #7f88cf;     /* periwinkle accent */
+  --coral: #b5631d;    /* burnt orange accent */
+  --green: #2f8a5b;    /* success / thumbnails */
+  --line: #d7e1d4;
+  --shadow: 0 12px 30px rgba(31, 72, 46, .12);
+  --r: 18px;
+
+  /* studio.html variable names */
+  --surface-2: #e6efe3;
+  --aubergine: #2f6f48;
+  --magenta: #7f88cf;  /* periwinkle */
+  --lilac: #b9a3e0;    /* lavender */
+  --gold: #c29a4b;     /* soft warm gold, sits fine beside greens */
+  --success: #2f8a5b;
+  --warning: #b5631d;  /* burnt orange */
+  --radius: 18px;
+
+  /* extra tokens for new Phase 2 UI */
+  --fx-forest: #20482f;
+  --fx-hunter: #2f6f48;
+  --fx-sage: #8fae97;
+  --fx-burnt: #b5631d;
+  --fx-lavender: #b9a3e0;
+  --fx-peri: #7f88cf;
+}
+
+/* Soft green glow instead of the old lilac/coral wash. */
+body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(143, 174, 151, .28), transparent 22%),
+    radial-gradient(circle at 92% 6%, rgba(185, 163, 224, .16), transparent 20%),
+    var(--bg) !important;
+}
+
+/* Project thumbnails: sage-to-lavender instead of pink. */
+.thumb {
+  background: linear-gradient(135deg, #dfeadb, #ece5f4) !important;
+}
+
+/* Accent focus ring in periwinkle for a calm, on-brand highlight. */
+a:focus-visible, button:focus-visible, input:focus-visible,
+select:focus-visible, textarea:focus-visible, .kbd-focus:focus-visible {
+  outline: 3px solid var(--fx-peri) !important;
+  outline-offset: 2px;
+}
+
+/* Studio's top bar is a hardcoded aubergine gradient — green it.
+   Scoped to `.app header` so shared.css pages (which use `.top`, no `.app`) are untouched. */
+.app header {
+  background: linear-gradient(90deg, #20482f, #2f6f48 55%, #3f7d55) !important;
+}
+
+/* ---- DARK THEME ----------------------------------------------------------- */
+html[data-theme="dark"] {
+  /* shared.css names */
+  --bg: #131a13;
+  --surface: #1c241b;
+  --surface2: #243026;
+  --ink: #eef3ea;
+  --muted: #a7bbab;
+  --aub: #86b394;      /* soft sage-green for text/accents on dark (not mint) */
+  --plum: #6f9a7d;
+  --pink: #9aa2e0;
+  --coral: #d1793a;
+  --green: #4cad7a;
+  --line: #33422f;
+  --shadow: 0 12px 30px rgba(0, 0, 0, .40);
+
+  /* studio names */
+  --surface-2: #243026;
+  --aubergine: #86b394;
+  --magenta: #9aa2e0;
+  --lilac: #c3b0e8;
+  --gold: #c9a959;
+  --success: #4cad7a;
+  --warning: #d1793a;
+}
+
+html[data-theme="dark"] body {
+  background:
+    radial-gradient(circle at 10% 0%, rgba(47, 111, 72, .30), transparent 22%),
+    var(--bg) !important;
+}
+
+html[data-theme="dark"] .thumb {
+  background: linear-gradient(135deg, #2a3a2c, #2f2f42) !important;
+}
+
+html[data-theme="dark"] .app header {
+  background: linear-gradient(90deg, #16301f, #1f4d2e 55%, #2b6440) !important;
+}
+
+/* ---- Shared new-component styles (used by the FiberOS home/dashboard) ----- */
+.fx-footer {
+  border-top: 1px solid var(--line);
+  margin-top: 60px;
+  padding: 28px 22px 48px;
+  color: var(--muted);
+  font-size: .9rem;
+}
+.fx-footer .fx-footin { max-width: 1400px; margin: auto; display: flex; gap: 18px; flex-wrap: wrap; justify-content: space-between; }
+.fx-footer a { color: var(--aub); text-decoration: none; font-weight: 700; }
+.fx-footer a:hover { text-decoration: underline; }
+
+/* Tool launcher cards on the home page */
+.fx-tools { display: grid; grid-template-columns: repeat(auto-fill, minmax(240px, 1fr)); gap: 18px; }
+.fx-tool {
+  display: block; text-decoration: none; color: inherit;
+  background: var(--surface); border: 1px solid var(--line);
+  border-radius: var(--r); box-shadow: var(--shadow); padding: 22px;
+  transition: transform .12s ease, box-shadow .12s ease;
+}
+.fx-tool:hover { transform: translateY(-3px); box-shadow: 0 16px 36px rgba(31, 72, 46, .18); }
+.fx-tool .fx-tool-eyebrow { font-weight: 800; font-size: .78rem; letter-spacing: .04em; text-transform: uppercase; color: var(--aub); }
+.fx-tool h3 { margin: 8px 0 6px; }
+.fx-tool.fx-soon { opacity: .72; }
+.fx-tool.fx-soon .fx-badge {
+  display: inline-block; margin-top: 10px; padding: 4px 10px; border-radius: 999px;
+  background: var(--surface2); color: var(--muted); font-weight: 800; font-size: .74rem;
+}
+.fx-swatches { display: flex; gap: 6px; margin-top: 14px; }
+.fx-swatches span { width: 20px; height: 20px; border-radius: 6px; border: 1px solid rgba(0,0,0,.08); }
+.fx-section-head { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin: 34px 0 14px; }
+.fx-section-head h2 { margin: 0; }
+
+/* ---- Studio-only accent fixes -------------------------------------------------
+   Studio has a few hardcoded pink/aubergine gradients that variable overrides
+   can't reach. These are scoped to `.app` (studio's wrapper) so shared.css pages
+   are untouched. !important beats studio's later non-important inline rules. */
+
+/* Primary/default buttons: pink gradient -> green. Leave secondary/ghost/tertiary/danger. */
+.app .btn:not(.secondary):not(.ghost):not(.tertiary):not(.danger) {
+  background: linear-gradient(135deg, #2f6f48, #20482f) !important;
+  box-shadow: 0 8px 22px rgba(31, 72, 46, .22) !important;
+}
+/* Brand badge tile */
+.app .brand-badge {
+  background: linear-gradient(145deg, #2f6f48, #8fae97) !important;
+}
+/* Header CTA ("Sign In to Save") uses a bare .primary class, pink by default. */
+.app .primary {
+  background: linear-gradient(135deg, #2f6f48, #20482f) !important;
+  color: #fff !important;
+}
+/* Active-state outlines: pink -> periwinkle */
+.app .tool-box.active { outline-color: var(--fx-peri) !important; }
+.app .palette-item.active { outline-color: var(--fx-peri) !important; box-shadow: 0 0 0 3px rgba(127, 136, 207, .14) !important; }
+.app .replacement-option.selected { outline-color: var(--fx-peri) !important; background: #f3f4fb !important; }
+.app .step-chip.active { color: var(--fx-hunter) !important; }
+html[data-theme="dark"] .app .step-chip.active { color: #20482f !important; }
+
+/* ---- Dark-mode readability fixes (low-contrast chips/notes) ----------------- */
+/* The "auto" tag (.kbd) hardcodes a white background; give it a themed one so its
+   text is readable in dark mode. */
+html[data-theme="dark"] .kbd {
+  background: #2c3a2e !important;
+  color: #e8f0e8 !important;
+  border-color: #3c4c3d !important;
+}
+/* Info notes / tips used hardcoded pale backgrounds that vanish in dark mode. */
+html[data-theme="dark"] .note {
+  background: #1f2e1e !important;
+  border-color: #33472f !important;
+  color: #dcecdd !important;
+}
+html[data-theme="dark"] .tip {
+  background: #2a2620 !important;
+  border-color: #4a4230 !important;
+  color: #ecdfc4 !important;
+}
+/* summary-card ("Grid size recommendation") text stays readable on its dark card. */
+html[data-theme="dark"] .summary-card { color: var(--ink) !important; }
+
+/* Studio surfaces that hardcode a light background and were missed by the app's own
+   dark-mode rules — they showed dark/low-contrast text on white in night mode.
+   The Beginner-guide walkthrough panel + chapter cards + the Close button were the
+   worst offenders (unreadable). Give them a dark surface with light text. */
+html[data-theme="dark"] .video-stage,
+html[data-theme="dark"] .chapter,
+html[data-theme="dark"] .close,
+html[data-theme="dark"] .option-card,
+html[data-theme="dark"] .yarn-pick-card,
+html[data-theme="dark"] .variant-card,
+html[data-theme="dark"] .mode-card,
+html[data-theme="dark"] .color-summary,
+html[data-theme="dark"] .replacement-option,
+html[data-theme="dark"] .compare-stage,
+html[data-theme="dark"] .instructions,
+html[data-theme="dark"] .checkline,
+html[data-theme="dark"] .layout-option,
+html[data-theme="dark"] .chart-preview-card {
+  background: #23211d !important;      /* warm dark, low glare */
+  color: #ecefe6 !important;
+  border-color: #3d4438 !important;
+}
+/* Make sure child text inside those cards inherits the light color (titles were
+   using the button's default dark color; muted text was pale green on white). */
+html[data-theme="dark"] .chapter strong,
+html[data-theme="dark"] .option-card strong,
+html[data-theme="dark"] .mode-card strong { color: #f2f5ee !important; }
+html[data-theme="dark"] .chapter .muted,
+html[data-theme="dark"] .video-stage .muted { color: #c3cdba !important; }
+
+/* Selected/active states that used pink-tinted white backgrounds. */
+html[data-theme="dark"] .selected { background: #2a2a33 !important; }
+
+/* Packet + Yarn Library surfaces that hardcode white (dropdowns, result cards, chips)
+   and would glare as white boxes on the dark pages. */
+html[data-theme="dark"] .yarn-results,
+html[data-theme="dark"] .setting-preview,
+html[data-theme="dark"] .meta-chip,
+html[data-theme="dark"] .color-card,
+html[data-theme="dark"] .yarn-result,
+html[data-theme="dark"] .yarn-selected {
+  background: #23211d !important;
+  color: #ecefe6 !important;
+  border-color: #3d4438 !important;
+}
+/* Amber "notice"/status/availability chips: dark, low-glare version with light text. */
+html[data-theme="dark"] .notice,
+html[data-theme="dark"] .status-message,
+html[data-theme="dark"] .availability-badge {
+  background: #2a2620 !important;
+  border-color: #4a4230 !important;
+  color: #ecdfc4 !important;
+}
+
+/* =========================================================================
+   Editor app-shell: the chart is ALWAYS fully visible. Tools (left) and the
+   color key (right) each scroll on their own; the chart fills the middle and is
+   sized in JS (fitEditorChart) to the visible height, so nothing gets clipped
+   and there is no page scroll to hunt for the graph.
+   ========================================================================= */
+#screen-editor.active { height: calc(100vh - 116px) !important; overflow: hidden !important; }
+#screen-editor .editor-layout {
+  display: grid !important;
+  grid-template-columns: 264px minmax(0, 1fr) 300px !important;
+  grid-template-rows: 100% !important;
+  grid-template-areas: "tools chart colorkey" !important;
+  height: 100% !important; min-height: 0 !important; gap: 14px !important;
+}
+#screen-editor .editor-layout > .panel.left { grid-area: tools; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+#screen-editor .editor-layout > .panel:not(.left):not(.right) { grid-area: chart; min-height: 0; overflow: hidden; }
+#screen-editor .editor-layout > .panel.right { grid-area: colorkey; min-height: 0; overflow: auto; overscroll-behavior: contain; }
+/* Right column is a simple vertical stack (older layouts set this to a 3-col grid, which
+   collapsed the color list to a sliver). */
+#screen-editor .editor-layout > .panel.right .panel-pad { display: flex !important; flex-direction: column; align-items: stretch; gap: 12px; }
+/* color key: a vertical, scrollable list of colors (never cut off sideways) */
+#screen-editor .panel.right .palette-list {
+  display: grid !important; grid-template-columns: 1fr !important;
+  gap: 10px; overflow: visible !important; max-height: none !important;
+}
+/* Each color is a compact card that fits the narrow column: swatch + name/detail on the
+   first row (text wraps normally), the Use/Options buttons on their own row below. */
+#screen-editor .panel.right .palette-item {
+  display: flex !important; flex-wrap: wrap; align-items: center; gap: 8px 10px;
+  width: auto; min-width: 0;
+}
+#screen-editor .panel.right .palette-item > .color-swatch { flex: 0 0 auto; }
+#screen-editor .panel.right .palette-item > div:not(.palette-quick-actions) { flex: 1 1 150px; min-width: 0; }
+#screen-editor .panel.right .palette-item > .palette-quick-actions { flex: 1 0 100%; justify-content: flex-start; }
+#screen-editor .panel.right .tip { display: none; }
+#screen-editor .panel.right #addEditorColorBtn { width: 100%; }
+/* graph pane fills its column; the chart box height is set in JS */
+#screen-editor .editor-layout > .panel:not(.left):not(.right) > .panel-pad { height: 100%; display: flex; flex-direction: column; min-height: 0; }
+#screen-editor .editor-compare { flex: 1; min-height: 0; grid-template-columns: 150px minmax(0, 1fr) !important; align-items: start; }
+#screen-editor .editor-source-card { align-self: start; position: static; }
+#screen-editor .editor-canvas-wrap { min-height: 0 !important; overflow: auto; display: flex; align-items: flex-start; justify-content: center; }
+/* Below ~1300px the chart column is tight, so drop the reference thumbnail and give the
+   whole column to the chart (the chart is the priority; the reference is a nicety). */
+@media (min-width: 1001px) and (max-width: 1300px) {
+  #screen-editor .editor-compare { grid-template-columns: minmax(0, 1fr) !important; }
+  #screen-editor .editor-source-card { display: none !important; }
+}
+/* Narrow screens: stack and let the page scroll (JS uses the mobile path). */
+@media (max-width: 1000px) {
+  #screen-editor.active { height: auto !important; overflow: visible !important; }
+  #screen-editor .editor-layout {
+    grid-template-columns: 1fr !important;
+    grid-template-areas: "colorkey" "tools" "chart" !important;
+    height: auto !important;
+  }
+  #screen-editor .panel.right .palette-list { grid-template-columns: repeat(2, minmax(0,1fr)) !important; }
+  #screen-editor .editor-canvas-wrap { min-height: 420px !important; }
+}
+
+/* Editor tools: keep only the tapestry essentials (paint, fill, eyedropper,
+   undo, redo). Hide recolor-region, select/line/circle/replace-all, and the
+   selection-transform actions — clutter for tapestry chart correction. */
+#screen-editor #toolButtonsWrap [data-tool="rect"],
+#screen-editor #toolButtonsWrap #selectTool,
+#screen-editor #toolButtonsWrap #lineTool,
+#screen-editor #toolButtonsWrap #circleTool,
+#screen-editor #toolButtonsWrap #replaceAllTool { display: none !important; }
+#screen-editor .tool-box:has(#selectionInfo) { display: none !important; }
+
+/* Packet: written instructions must be background-free so they print cleanly
+   (the dark-mode audit was leaking a dark background onto the printable page). */
+.paper .instructions,
+html[data-theme="dark"] .paper .instructions {
+  background: transparent !important;
+  color: #1a1a1a !important;
+}
+
+/* =========================================================================
+   Packet: trim the customization fat (approved).
+   ========================================================================= */
+.controls .card:has(#projectPhoto) { display: none !important; }   /* Pattern contents: photo / blank grid / journal */
+.controls .field:has(#theme) { display: none !important; }         /* Visual-style themes (one clean style only) */
+.controls label:has(#compress) { display: none !important; }       /* Compress toggle — now always on (the crochet standard) */
+/* Color details: display + light "change yarn" only, not a full re-editor */
+#colorEditor .yarn-match-actions { display: none !important; }               /* "Show closest colors" */
+#colorEditor .field:has(input[data-k="hex"]) { display: none !important; }   /* raw hex field */
+#colorEditor .grid.two:has(input[data-k="name"]) { display: none !important; } /* name/brand text inputs */
+
+/* =========================================================================
+   Dark-mode readability fixes (FL-41): brush-size buttons + live sample.
+   ========================================================================= */
+html[data-theme="dark"] .brush-options button {
+  background: #23211d !important;
+  color: #ecefe6 !important;
+  border-color: #3d4438 !important;
+}
+html[data-theme="dark"] .brush-options button.active {
+  background: #2f4636 !important;
+  border-color: #4a7a5c !important;
+}
+html[data-theme="dark"] .setting-preview .sample-row:nth-child(even) { background: #2c2a25 !important; }
+
+/* Global brand-filter reminder chip (Tapestry Studio header) */
+.brand-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border:1px solid var(--line);border-radius:999px;background:var(--surface);color:var(--ink);font-weight:800;font-size:.8rem;text-decoration:none;white-space:nowrap;line-height:1}
+.brand-chip:hover{border-color:var(--aub)}
+.brand-chip.filtered{background:var(--surface2);border-color:var(--aub);color:var(--aub)}
+.brand-chip::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--muted)}
+.brand-chip.filtered::before{background:var(--aub)}
+
+/* Prominent "Choose your yarn" card on the Adjust screen (easy to spot, not buried) */
+.tool-box.highlight-box{border:1.5px solid var(--aub);background:var(--surface2);border-radius:14px;padding:14px}
+.tool-box.highlight-box .hl-title{font-weight:800;font-size:1.04rem;color:var(--ink)}
+.tool-box.highlight-box .hl-tag{background:var(--aub);color:#fff;font-size:.64rem;font-weight:800;padding:2px 9px;border-radius:999px;text-transform:uppercase;letter-spacing:.04em}
+
+/* Adjust screen: soft glow when stitch fields auto-update; sticky Create button */
+@keyframes fiberosFieldFlash { 0%{box-shadow:0 0 0 3px var(--aub)} 100%{box-shadow:0 0 0 0 rgba(0,0,0,0)} }
+.field-flash{ animation:fiberosFieldFlash .8s ease-out }
+#screen-adjust .cta-sticky{position:sticky;bottom:12px;z-index:6;padding-top:10px}
+
+/* Reference thumbnail fills its (narrow) column; chart column layout is defined in the
+   editor app-shell block above so it can respond to width. */
+#screen-editor .editor-source-card canvas { width: 100%; height: auto; }
+
+/* The dark-mode top bar was a hardcoded plum in shared.css — green it to match the brand. */
+html[data-theme="dark"] .top{ background: rgba(19,29,21,.96) !important; }

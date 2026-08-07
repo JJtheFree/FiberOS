@@ -1,0 +1,108 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>FiberOS Yarn Library</title><link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="fiberos-green.css">
+<style>
+  .library-meta{display:flex;gap:10px;flex-wrap:wrap;align-items:center;margin:12px 0 0}.meta-chip{border:1px solid #ded8df;border-radius:999px;padding:6px 10px;background:#fff;font-size:.82rem}.status-dot{display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#a96b16}.status-dot.ready{background:#267352}.small{font-size:.84rem}
+  .search-stack{display:grid;gap:16px}.step-label{display:flex;align-items:center;gap:9px}.step-number{display:grid;place-items:center;width:25px;height:25px;border-radius:50%;background:#55245d;color:#fff;font-size:.8rem;font-weight:800}.optional{font-weight:500;color:#887889;font-size:.78rem}
+  select,input{min-height:46px}.filters{border-top:1px solid #e9e0e7;padding-top:16px}.result-shell{max-height:650px;overflow:auto;padding-right:6px;scrollbar-gutter:stable}.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}.color-card{border:1px solid #e5dce4;border-radius:14px;background:#fff;padding:13px;display:grid;grid-template-columns:46px 1fr;gap:12px}.color-card .big-swatch{width:46px;height:46px;border-radius:12px;border:1px solid #0002}.result-name{font-weight:800}.result-meta{font-size:.8rem;color:#766777;line-height:1.4}.empty-state{padding:30px;text-align:center;border:1px dashed #ddcfdd;border-radius:14px;color:#766777}.custom-builder{display:grid;gap:13px}.match-note{font-size:.82rem;color:#725f73}.footer-credit{margin-top:30px;padding:18px 0 8px;border-top:1px solid #ded8df;color:#817783;font-size:.72rem;line-height:1.45}.footer-credit p{margin:4px 0}.footer-credit a{color:#6e6470}.countline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.inline-swatch{display:inline-block;width:15px;height:15px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid #0002}.results-actions{display:flex;justify-content:center;padding-top:16px}.filter-help{margin:4px 0 0;color:#766777;font-size:.82rem}.field select:disabled{opacity:.6;cursor:not-allowed}.availability{font-size:.76rem;color:#887889;margin-left:auto;font-weight:600}.availability-badge{display:inline-flex;margin-top:6px;padding:3px 7px;border-radius:999px;background:#fff3dc;border:1px solid #efd4a5;color:#7a4d12;font-size:.72rem;font-weight:800}
+  @media(max-width:760px){.hero{align-items:flex-start}.grid.two{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr}.result-shell{max-height:560px}}
+</style>
+</head>
+<body>
+<header class="top"><div class="topin"><a class="brand" href="index.html">FiberOS</a><nav class="nav"><a href="index.html">Home</a><a href="studio.html">Tapestry Studio</a><a class="active" href="palette-studio.html">Palette Studio</a></nav></div></header>
+<main class="wrap">
+<section class="hero"><div><span class="pill">FiberOS yarn library</span><h1>Find yarn colors</h1><div class="sub">Choose a color family, then narrow the results by brand, yarn weight, or yarn line.</div></div><button class="btn" id="openCustom">Add custom color</button></section>
+<div class="library-meta"><span class="meta-chip"><span id="statusDot" class="status-dot"></span><span id="libraryStatus">Loading yarn colors…</span></span><span class="meta-chip" id="recordCount">0 colorways</span><span class="meta-chip" id="lastUpdated">Loading…</span></div>
+
+<div class="grid two" style="margin-top:18px;align-items:start">
+<section class="card"><h2>Search official colors</h2><div class="field" style="margin-bottom:14px"><label for="quickSearch">Search color name or HEX</label><input id="quickSearch" placeholder="Example: sage or #93a887"></div>
+<div class="search-stack">
+  <div class="field"><label class="step-label" for="familySearch"><span class="step-number">1</span>Color family <span class="availability" id="familyAvailability"></span></label><select id="familySearch"><option value="">Choose a color family</option><option>Red</option><option>Pink</option><option>Orange</option><option>Yellow</option><option>Green</option><option>Blue</option><option>Purple</option><option>Brown</option><option>Beige / Cream</option><option>Gray</option><option>Black</option><option>White</option><option>Silver</option><option>Gold</option></select></div>
+  <div class="field"><label class="step-label" for="brandSearch"><span class="step-number">2</span>Brand <span class="optional">optional</span><span class="availability" id="brandAvailability"></span></label><select id="brandSearch" disabled><option value="">Choose a color family first</option></select><p class="filter-help">Only brands with colors in the selected family will appear.</p></div>
+  <div class="filters"><div class="step-label" style="font-weight:800;margin-bottom:12px"><span class="step-number">3</span>Yarn details <span class="optional">optional</span></div>
+    <div class="grid two"><div class="field"><label for="weightSearch">Yarn weight <span class="availability" id="weightAvailability"></span></label><select id="weightSearch" disabled><option value="">Choose a color family first</option></select></div><div class="field"><label for="yarnSearch">Yarn line <span class="availability" id="lineAvailability"></span></label><select id="yarnSearch" disabled><option value="">Choose a color family first</option></select></div></div>
+    <p class="filter-help">These menus update automatically so every option leads to an available match.</p>
+  </div>
+</div></section>
+<section class="card"><h2>Create a custom color</h2><div class="custom-builder"><p class="muted" style="margin:0">Use this only when the official results do not contain the color you need.</p><div class="field"><label for="customName">Color name</label><input id="customName" placeholder="Example: Grandma's muted cherry"></div><div class="field"><label for="customHex">Choose the closest color</label><input id="customHex" type="color" value="#7c3a71" style="width:100%;height:54px;padding:5px"></div><div class="field"><label for="customBrand">Brand <span class="optional">optional</span></label><input id="customBrand" placeholder="Brand or local dyer"></div><div id="customMatches" class="match-note">Type a name to check for similar official colors.</div><button class="btn" id="saveCustom" type="button">Add to my custom colors</button><div id="customList"></div></div></section>
+</div>
+
+<section class="card" style="margin-top:18px"><div class="countline"><div><h2 style="margin:0">Matching yarn colors</h2><div class="muted small" id="resultSummary">Choose a color family to see available yarn colors.</div></div><button class="btn secondary" id="clearFilters">Clear</button></div><div class="result-shell" id="resultShell"><div id="results" class="result-grid"><div class="empty-state">Choose a color family to begin.</div></div><div class="results-actions"><button class="btn secondary" id="showMore" hidden>Show more</button></div></div></section>
+
+<footer class="footer-credit" aria-label="Yarn data attribution and disclaimer">
+<p>Yarn colorways from <a href="https://temperature-blanket.com" target="_blank" rel="noopener">temperature-blanket.com</a>, used under <a href="https://creativecommons.org/licenses/by/4.0/" target="_blank" rel="noopener">CC BY 4.0</a>. FiberOS normalizes and locally caches data; changes were made. Temperature Blanket does not endorse FiberOS.</p>
+<p>Digital colors are approximations. Physical yarn may differ because of displays, lighting, fiber content, manufacturing changes, and dye lots. Verify yarn in person and purchase enough from one dye lot. Brand, product-line, and colorway names belong to their respective owners. Data is provided as-is without guarantees.</p>
+
+</footer>
+</main>
+<script src="shared.js"></script><script src="yarn-api.js"></script>
+<script>
+const FAMILY_ORDER=['red','pink','orange','yellow','green','blue','purple','brown','beige / cream','gray','black','white','silver','gold'];
+const PAGE_SIZE=60;
+let official=[],catalog={brands:[],yarns:[],weights:[]},filteredRows=[],visibleCount=PAGE_SIZE;
+const $=id=>document.getElementById(id); const esc=v=>FIBER.escape(v||''); const norm=s=>String(s||'').toLowerCase().replace(/[^a-z0-9]/g,'');
+function uniqueAlpha(a){return [...new Set(a.filter(Boolean))].sort((x,y)=>x.localeCompare(y,undefined,{sensitivity:'base'}))}
+function weightName(x){const map={t:'Thread',c:'Cobweb',l:'Lace',lf:'Light Fingering',f:'Fingering',s:'Sport',d:'DK',w:'Worsted',a:'Aran',b:'Bulky',sb:'Super Bulky',j:'Jumbo',worsted:'Worsted',aran:'Aran',dk:'DK',bulky:'Bulky',fingering:'Fingering'};return x.yarnWeightName||map[x.yarnWeightId]||x.yarnWeightId||'Weight not listed'}
+function inferFamily(x){
+ if(x.colorFamily)return x.colorFamily.toLowerCase();
+ const name=String(x.name||'').toLowerCase(); const n=norm(name);
+ if(/multicolor|multi color|rainbow|variegat|ombre|stripe|print|speckle|marled/.test(name))return'multicolor';
+ if(/rose gold|champagne|brass|mustard gold|sun gold|golden/.test(name)||/(^|[^a-z])gold([^a-z]|$)/.test(name))return'gold';
+ if(/silver|pewter|platinum|metallic gray|metallic grey/.test(name))return'silver';
+ let h=(x.hex||'#888888').replace('#','');if(h.length!==6)h='888888';let r=parseInt(h.slice(0,2),16),g=parseInt(h.slice(2,4),16),b=parseInt(h.slice(4,6),16),mx=Math.max(r,g,b),mn=Math.min(r,g,b),delta=mx-mn;
+ const light=(mx+mn)/510; let hue=0;if(delta){hue=mx===r?((g-b)/delta)%6:mx===g?(b-r)/delta+2:(r-g)/delta+4;hue=(hue*60+360)%360}
+ if(mx<48)return'black'; if(mn>238)return'white';
+ if(delta<18){if(light>.88)return'white';if(light<.22)return'black';return'gray'}
+ if((hue<20||hue>=340)&&light>.62&&r>b*1.12)return'pink';
+ if(hue>=325&&hue<340&&light>.48)return'pink';
+ if(hue>=18&&hue<48&&light<.62&&r<210)return'brown';
+ if(hue>=15&&hue<55&&light>.72&&delta<90)return'beige / cream';
+ if(hue<15||hue>=345)return'red';if(hue<45)return'orange';if(hue<70)return'yellow';if(hue<165)return'green';if(hue<255)return'blue';if(hue<325)return'purple';return'pink';
+}
+function familyRows(){const f=$('familySearch').value.toLowerCase();return f?official.filter(x=>inferFamily(x)===f):[]}
+function setOptions(select,placeholder,items,current=''){select.innerHTML=`<option value="">${esc(placeholder)}</option>`+items.map(x=>`<option>${esc(x)}</option>`).join('');select.disabled=!$('familySearch').value;if(items.includes(current))select.value=current}
+function updateDependentMenus(changed){
+ const f=$('familySearch').value.toLowerCase();
+ if(!f){setOptions($('brandSearch'),'Choose a color family first',[]);setOptions($('weightSearch'),'Choose a color family first',[]);setOptions($('yarnSearch'),'Choose a color family first',[]);['brandAvailability','weightAvailability','lineAvailability','familyAvailability'].forEach(id=>$(id).textContent='');return}
+ let base=familyRows();$('familyAvailability').textContent=`${base.length.toLocaleString()} colors`;
+ const oldB=$('brandSearch').value,oldW=$('weightSearch').value,oldY=$('yarnSearch').value;
+ if(changed==='family'){$('brandSearch').value='';$('weightSearch').value='';$('yarnSearch').value=''}
+ const brands=uniqueAlpha(base.filter(x=>(!$('weightSearch').value||weightName(x)===$('weightSearch').value)&&(!$('yarnSearch').value||x.yarnName===$('yarnSearch').value)).map(x=>x.brandName));
+ setOptions($('brandSearch'),'All available brands',brands,changed==='family'?'':oldB);
+ const b=$('brandSearch').value;
+ const weights=uniqueAlpha(base.filter(x=>(!b||x.brandName===b)&&(!$('yarnSearch').value||x.yarnName===$('yarnSearch').value)).map(weightName));
+ setOptions($('weightSearch'),'All available weights',weights,changed==='family'?'':oldW);
+ const w=$('weightSearch').value;
+ const lines=uniqueAlpha(base.filter(x=>(!b||x.brandName===b)&&(!w||weightName(x)===w)).map(x=>x.yarnName));
+ setOptions($('yarnSearch'),'All available yarn lines',lines,changed==='family'?'':oldY);
+ $('brandAvailability').textContent=`${brands.length} available`;$('weightAvailability').textContent=`${weights.length} available`;$('lineAvailability').textContent=`${lines.length} available`;
+}
+function getFilteredRows(){const f=$('familySearch').value.toLowerCase(),b=$('brandSearch').value,w=$('weightSearch').value,y=$('yarnSearch').value,q=norm($('quickSearch').value);return official.filter(x=>(!f||inferFamily(x)===f)&&(!b||x.brandName===b)&&(!w||weightName(x)===w)&&(!y||x.yarnName===y)&&(!q||norm([x.name,x.hex,x.brandName,x.yarnName,weightName(x)].join(' ')).includes(q))).sort((a,b)=>a.brandName.localeCompare(b.brandName)||a.yarnName.localeCompare(b.yarnName)||a.name.localeCompare(b.name))}
+function renderResults(reset=true){
+ if(reset)visibleCount=PAGE_SIZE;const f=$('familySearch').value;
+ const q=$('quickSearch').value.trim();if(!f&&!q){filteredRows=[];$('results').innerHTML='<div class="empty-state">Choose a color family or search by color, brand, yarn line, weight, or HEX.</div>';$('resultSummary').textContent='Choose a color family or search the complete API library.';$('showMore').hidden=true;return}
+ filteredRows=getFilteredRows();const shown=filteredRows.slice(0,visibleCount);const b=$('brandSearch').value,w=$('weightSearch').value,y=$('yarnSearch').value;
+ const filters=[f,b,w,y,q&&`search: ${q}`].filter(Boolean).join(' · ');$('resultSummary').textContent=`${filteredRows.length.toLocaleString()} color${filteredRows.length===1?'':'s'} available${filters?' for '+filters:''}. Showing ${Math.min(shown.length,filteredRows.length).toLocaleString()}.`;
+ $('results').innerHTML=shown.length?shown.map(x=>`<article class="color-card"><span class="big-swatch" style="background:${esc(x.hex)}"></span><div><div class="result-name">${esc(x.name)}</div><div class="hex">${esc(x.hex)}</div><div class="result-meta">${esc(x.brandName)} · ${esc(x.yarnName)}<br>${esc(weightName(x))}${x.unavailable?'<br><span class="availability-badge">Discontinued / unavailable</span>':''}</div></div></article>`).join(''):'<div class="empty-state">No official colors match all selected filters. Remove a filter or create a custom color.</div>';
+ $('showMore').hidden=shown.length>=filteredRows.length;$('showMore').textContent=`Show ${Math.min(PAGE_SIZE,filteredRows.length-shown.length).toLocaleString()} more`;
+}
+function applyChange(type){updateDependentMenus(type);renderResults(true)}
+function levenshtein(a,b){a=norm(a);b=norm(b);let d=Array.from({length:a.length+1},(_,i)=>[i]);for(let j=1;j<=b.length;j++)d[0][j]=j;for(let i=1;i<=a.length;i++)for(let j=1;j<=b.length;j++)d[i][j]=Math.min(d[i-1][j]+1,d[i][j-1]+1,d[i-1][j-1]+(a[i-1]===b[j-1]?0:1));return d[a.length][b.length]}
+function checkCustom(){const q=$('customName').value.trim();if(!q){$('customMatches').textContent='Type a name to check for similar official colors.';return}const best=[...official].map(x=>({x,d:levenshtein(q,x.name)})).sort((a,b)=>a.d-b.d).slice(0,3);$('customMatches').innerHTML=best[0]&&best[0].d<=5?'Did you mean: '+best.map(({x})=>`<span style="white-space:nowrap"><span class="inline-swatch" style="background:${esc(x.hex)}"></span>${esc(x.name)}</span>`).join(' · '):'No close official name found. You can save this as a custom color.'}
+function drawCustom(){const c=JSON.parse(localStorage.getItem('fiberosCustomColors')||'[]');$('customList').innerHTML=c.length?'<div style="display:grid;gap:7px">'+c.slice(0,6).map(x=>`<div class="suggestion"><span class="inline-swatch" style="background:${esc(x.hex)}"></span><strong>${esc(x.name)}</strong>${x.brand?' · '+esc(x.brand):''}</div>`).join('')+'</div>':''}
+function saveCustom(){const name=$('customName').value.trim();if(!name)return alert('Enter a color name first.');const best=[...official].map(x=>({x,d:levenshtein(name,x.name)})).sort((a,b)=>a.d-b.d)[0];if(best&&best.d<=2&&!confirm(`A similar official color exists: ${best.x.name}. Add a custom color anyway?`))return;const c=JSON.parse(localStorage.getItem('fiberosCustomColors')||'[]');c.unshift({name,hex:$('customHex').value,brand:$('customBrand').value.trim()});localStorage.setItem('fiberosCustomColors',JSON.stringify(c));$('customName').value='';$('customBrand').value='';drawCustom();checkCustom()}
+async function load(){try{const {meta,colorways}=await window.FiberOSYarnAPI.load();official=colorways.map(x=>({...x,yarnWeightName:weightName(x)}));$('statusDot').classList.add('ready');$('libraryStatus').textContent='Yarn Colorways API ready';$('recordCount').textContent=`${official.length.toLocaleString()} colorways`;$('lastUpdated').textContent=`API sync ${new Date(meta.syncedAt).toLocaleDateString()}`;($('fixtureNotice')||{}).hidden=true;updateDependentMenus('family');renderResults(true)}catch(e){console.error(e);$('libraryStatus').textContent='Yarn Colorways API unavailable';$('lastUpdated').textContent='Bundled API export failed validation';$('results').innerHTML='<div class="empty-state">FiberOS could not load the Yarn Colorways API export. No alternate yarn source is enabled.</div>'}drawCustom()}
+$('familySearch').onchange=()=>applyChange('family');$('brandSearch').onchange=()=>applyChange('brand');$('weightSearch').onchange=()=>applyChange('weight');$('yarnSearch').onchange=()=>applyChange('line');$('showMore').onclick=()=>{visibleCount+=PAGE_SIZE;renderResults(false)};$('customName').oninput=checkCustom;$('saveCustom').onclick=saveCustom;$('openCustom').onclick=()=>{$('customName').focus();window.scrollTo({top:$('customName').getBoundingClientRect().top+scrollY-120,behavior:'smooth'})};$('clearFilters').onclick=()=>{$('familySearch').value='';$('brandSearch').value='';$('weightSearch').value='';$('yarnSearch').value='';updateDependentMenus('family');renderResults(true)};load();
+</script>
+<script>
+(function(){
+let compare=[];const favKey='fiberos_yarn_favorites',recentKey='fiberos_yarn_recent';
+document.getElementById('quickSearch')?.addEventListener('input',()=>{visibleCount=60;renderResults(true)});
+document.getElementById('resultGrid')?.addEventListener('click',e=>{const card=e.target.closest('.color-card');if(!card)return;const name=card.querySelector('.result-name')?.textContent||'',hex=card.querySelector('.big-swatch')?.style.backgroundColor||'';let recent=JSON.parse(localStorage.getItem(recentKey)||'[]');recent=[{name,hex},...recent.filter(x=>x.name!==name)].slice(0,20);localStorage.setItem(recentKey,JSON.stringify(recent));if(e.altKey){compare.push({name,hex});compare=compare.slice(-2);const tray=document.getElementById('compareTray');tray.style.display='block';document.getElementById('compareContent').innerHTML=compare.map(x=>`<div class="color-card"><span class="big-swatch" style="background:${x.hex}"></span><strong>${x.name}</strong></div>`).join('')}});
+})();
+</script>
+<footer class="fx-footer"><div class="fx-footin"><div><strong>FiberOS</strong> &mdash; a cozy home for fiber projects.</div><div>Yarn data from <a href="https://temperature-blanket.com/" target="_blank" rel="noopener">temperature-blanket.com</a> (CC BY 4.0). Digital colors are approximate.</div></div></footer>
+</body></html>

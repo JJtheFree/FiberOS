@@ -1,0 +1,181 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FiberOS — Welcome</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="fiberos-green.css">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&display=swap" rel="stylesheet">
+  <style>
+    /* =====================================================================
+       LANDING — cozy, cinematic scroll scene built from layered art in /landing
+       Layers (back→front): bg.png (room), basket.png, yarnball.png (falls on
+       scroll), trail.png (the squiggle you follow down to the buttons).
+       ===================================================================== */
+    :root{ --lp-green-1:#1c4a2e; --lp-green-2:#25603b; --lp-green-3:#357a4d; --lp-floor:#12301d; }
+    body{overflow-x:hidden;background:var(--lp-floor)}
+    .lp{position:relative}
+
+    .lp-hero{position:relative;height:100vh;min-height:560px;overflow:hidden}
+    .lp-layer{position:absolute;inset:-8%;background-repeat:no-repeat;background-position:center;will-change:transform}
+    .lp-bg{background-color:#0e1a12;background-image:linear-gradient(180deg, rgba(12,22,16,.62), rgba(12,22,16,.72) 60%, var(--lp-floor) 100%), url('landing/bg.png');background-size:cover}
+    .lp-basket{background-image:url('landing/basket.png');background-size:contain;background-position:center 42%}
+    /* the falling yarn ball — fixed so it isn't clipped; z-index 2 keeps it BEHIND the buttons (z-index 3) */
+    .lp-ball{position:fixed;top:14vh;left:50%;width:56vmin;height:56vmin;margin-left:-28vmin;
+      background:url('landing/yarnball.png') center/contain no-repeat;z-index:2;will-change:transform,opacity;pointer-events:none}
+    /* soft contact shadow so the basket rests on the platform, not floating */
+    .lp-shadow{position:absolute;left:50%;bottom:20vh;width:min(56vw,620px);height:60px;transform:translateX(-50%);
+      background:radial-gradient(ellipse at center, rgba(0,0,0,.5), rgba(0,0,0,0) 70%);filter:blur(3px);z-index:1}
+
+    .lp-cue{position:absolute;left:50%;bottom:26px;transform:translateX(-50%);z-index:4;color:rgba(255,255,255,.72);
+      font-family:'Fraunces',serif;font-size:1.05rem;letter-spacing:.04em;display:flex;flex-direction:column;align-items:center;gap:6px}
+    .lp-cue .arrow{font-size:1.4rem;animation:lpbob 1.8s ease-in-out infinite}
+    @keyframes lpbob{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+
+    /* The floor / platform where the question + choices live */
+    .lp-floor{position:relative;z-index:3;background:
+      radial-gradient(120% 80% at 50% -10%, #1c4630 0%, var(--lp-floor) 60%);
+      padding:2vh 20px 90px;text-align:center;margin-top:-6vh}
+    .lp-floor h1{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(38px,6.2vw,86px);line-height:1.02;
+      margin:0 auto 40px;max-width:16ch;color:#f4f0e6;text-shadow:0 8px 30px rgba(0,0,0,.5)}
+    .lp-choices{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:28px;max-width:1460px;margin:0 auto}
+    @media(max-width:900px){.lp-choices{grid-template-columns:1fr;max-width:640px}}
+
+    .lp-choice{position:relative;overflow:hidden;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;
+      min-height:420px;padding:64px 40px;border-radius:34px;text-decoration:none;color:#f4f0e6;
+      border:1px solid rgba(255,255,255,.12);box-shadow:0 22px 55px rgba(0,0,0,.42), inset 0 1px 0 rgba(255,255,255,.08);
+      transition:transform .22s ease, box-shadow .22s ease, filter .22s ease}
+    .lp-choice.c1{background:linear-gradient(165deg,#2c6a45,#1a4229)}
+    .lp-choice.c2{background:linear-gradient(165deg,#357a4d,#24603b)}
+    .lp-choice.c3{background:linear-gradient(165deg,#4a8f63,#2f6f48)}
+    .lp-choice:hover,.lp-choice:focus-visible{transform:translateY(-10px) scale(1.025);filter:brightness(1.08);
+      box-shadow:0 40px 90px rgba(0,0,0,.55), 0 0 0 2px rgba(255,255,255,.2), 0 0 46px rgba(120,205,155,.35)}
+    .lp-ttl{font-family:'Fraunces',serif;font-weight:600;font-size:clamp(1.7rem,2.7vw,2.5rem);letter-spacing:.2px}
+    .lp-cap{font-size:clamp(1.05rem,1.5vw,1.28rem);color:rgba(244,240,230,.92);max-width:22ch;line-height:1.35}
+    /* shimmer sweep on hover */
+    .lp-choice::after{content:"";position:absolute;top:0;left:-160%;width:80%;height:100%;transform:skewX(-20deg);
+      background:linear-gradient(90deg,transparent,rgba(255,255,255,.4),transparent);pointer-events:none}
+    .lp-choice:hover::after{animation:lpShimmer 1.05s ease}
+    @keyframes lpShimmer{to{left:160%}}
+
+    /* Placeholder (only if art is missing) */
+    .lp.no-art .lp-basket,.lp.no-art .lp-ball,.lp.no-art .lp-trail{background-image:none}
+    .lp-ph{display:none}
+    .lp.no-art .lp-ph{display:flex;position:absolute;inset:0;align-items:center;justify-content:center;flex-direction:column;gap:16px}
+    .lp.no-art .lp-ph .ball{width:200px;height:200px;border-radius:50%;background:radial-gradient(circle at 34% 30%,#6fae7e,#2f6f48 60%,#20482f)}
+    .lp.no-art .lp-ph .tag{color:var(--muted);background:rgba(0,0,0,.35);border:1px solid var(--line);border-radius:999px;padding:6px 14px;font-size:.85rem}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="topin">
+      <a class="brand" href="index.html">FiberOS</a>
+      <nav class="nav">
+        <a class="active" href="index.html">Home</a>
+        <a href="studio.html">Tapestry Studio</a>
+        <a href="palette-studio.html">Palette Studio</a>
+        <a href="my-studio.html">My Studio</a>
+        <a href="my-yarns.html">My Yarns</a>
+      </nav>
+      <div class="spacer"></div>
+      <button class="btn ghost small js-help" type="button">Help</button>
+    </div>
+  </header>
+
+  <main class="lp" id="lp">
+    <div class="lp-hero" id="lpHero">
+      <div class="lp-layer lp-bg"     data-depth="0.04"></div>
+      <div class="lp-layer lp-basket" data-depth="0.12"></div>
+      <div class="lp-shadow"></div>
+      <div class="lp-ph"><div class="ball"></div><div class="tag">Placeholder — add art to the landing/ folder</div></div>
+      <div class="lp-cue"><span>scroll down</span><span class="arrow">↓</span></div>
+    </div>
+    <!-- the yarn ball lives outside the hero so it can roll out and fall behind the buttons -->
+    <div class="lp-ball" id="lpBall"></div>
+
+    <section class="lp-floor">
+      <h1>What would you like to do today?</h1>
+      <div class="lp-choices">
+        <a class="lp-choice c1" href="studio.html">
+          <span class="lp-ttl">Tapestry Studio</span>
+          <span class="lp-cap">Build the grid for your next design.</span>
+        </a>
+        <a class="lp-choice c2" href="palette-studio.html">
+          <span class="lp-ttl">Palette Studio</span>
+          <span class="lp-cap">Pick your colors for your next design.</span>
+        </a>
+        <a class="lp-choice c3" href="my-studio.html">
+          <span class="lp-ttl">My Studio</span>
+          <span class="lp-cap">See your saved designs and color palettes.</span>
+        </a>
+      </div>
+    </section>
+  </main>
+
+  <footer class="fx-footer">
+    <div class="fx-footin">
+      <div><strong>FiberOS</strong> — a cozy home for fiber projects. Made from a crocheter's frustration, on purpose.</div>
+      <div>Yarn data from <a href="https://temperature-blanket.com/" target="_blank" rel="noopener">temperature-blanket.com</a> (CC BY 4.0). Digital colors are approximate.</div>
+    </div>
+  </footer>
+
+  <script src="shared.js"></script>
+  <script src="app/help.js"></script>
+  <script>
+    window.FiberOSHelp && FiberOSHelp.init({
+      title: 'Welcome to FiberOS',
+      intro: 'Your cozy home for tapestry-crochet projects.',
+      sections: [
+        { h: 'Three ways in', p: 'Tapestry Studio builds a crochet chart from a photo. Palette Studio picks colors grounded in real yarn. My Studio holds everything you have saved.' },
+        { h: 'My Yarns', p: 'Keep a personal stash of yarn you own or want to buy, and match palettes to just those.' },
+        { h: 'No account needed', p: 'Everything saves in this browser for now.' }
+      ]
+    });
+
+    var lp = document.getElementById('lp');
+    var ball = document.getElementById('lpBall');
+    var layers = [].slice.call(document.querySelectorAll('.lp-layer'));
+    var cue = document.querySelector('.lp-cue');
+
+    (function detectArt(){
+      var probe = new Image();
+      probe.onload = function(){ lp.classList.remove('no-art'); };
+      probe.onerror = function(){ lp.classList.add('no-art'); };
+      probe.src = 'landing/basket.png?' + Date.now();
+    })();
+
+    var mx = 0, my = 0;
+    function apply(){
+      var y = window.scrollY || 0;
+      var vh = window.innerHeight || 800;
+      // hero layers drift for depth
+      layers.forEach(function(el){
+        var d = parseFloat(el.dataset.depth) || 0.1;
+        var mxp = mx * d * 44;
+        var tyy = y * (-d * 0.7) + my * d * 18;
+        el.style.transform = 'translate3d(' + mxp.toFixed(1) + 'px,' + tyy.toFixed(1) + 'px,0)';
+      });
+      // the yarn ball rolls out of the basket and falls, then hides behind the buttons.
+      if(ball){
+        var fall = Math.min(1, y / (vh * 0.8));
+        var bty = fall * vh * 0.40;
+        ball.style.transform = 'translate3d(' + (mx * 16).toFixed(1) + 'px,' + bty.toFixed(1) + 'px,0) rotate(' + (fall * 380).toFixed(0) + 'deg)';
+        // fade out as it drops behind the buttons so it never peeks below them
+        ball.style.opacity = fall < 0.5 ? '1' : String(Math.max(0, 1 - (fall - 0.5) / 0.35));
+      }
+      if(cue) cue.style.opacity = String(Math.max(0, 1 - y / (vh * 0.4)));
+    }
+    window.addEventListener('scroll', function(){ requestAnimationFrame(apply); }, { passive: true });
+    window.addEventListener('mousemove', function(e){
+      mx = (e.clientX / window.innerWidth - 0.5) * 2;
+      my = (e.clientY / window.innerHeight - 0.5) * 2;
+      requestAnimationFrame(apply);
+    });
+    window.addEventListener('resize', apply);
+    apply();
+  </script>
+</body>
+</html>

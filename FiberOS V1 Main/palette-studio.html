@@ -1,0 +1,630 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <title>FiberOS — Palette Studio</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="fiberos-green.css">
+  <style>
+    .ps-modes{display:flex;gap:8px;margin-bottom:18px}
+    .ps-mode{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:10px 16px;border-radius:999px;cursor:pointer;font-weight:800}
+    .ps-mode.active{background:var(--aub);color:#fff;border-color:var(--aub)}
+    .ps-samples{display:grid;grid-template-columns:repeat(auto-fill,minmax(120px,1fr));gap:12px}
+    .ps-sample{border:1px solid var(--line);border-radius:14px;overflow:hidden;cursor:pointer;background:var(--surface);padding:0;transition:transform .12s}
+    .ps-sample:hover{transform:translateY(-2px)}
+    .ps-sample img{width:100%;height:96px;object-fit:cover;display:block}
+    .ps-moods{display:flex;flex-wrap:wrap;gap:8px}
+    .ps-mood{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:999px;padding:8px 14px;cursor:pointer;font-weight:700;text-transform:capitalize}
+    .ps-mood.active{background:var(--surface2);border-color:var(--aub);color:var(--aub)}
+    .ps-swatches{display:flex;flex-wrap:wrap;gap:14px;margin-top:6px}
+    .ps-swatch{width:200px;border:1px solid var(--line);border-radius:16px;overflow:hidden;background:var(--surface)}
+    .ps-swatch.locked{outline:2px solid var(--aub);outline-offset:-1px}
+    .ps-chip{height:80px}
+    .ps-swatch .ps-meta{padding:10px 12px}
+    .ps-swatch .ps-yarn{font-weight:800;line-height:1.2}
+    .ps-swatch .ps-hex{font-weight:700;letter-spacing:.02em;font-size:.78rem;color:var(--muted);margin-top:4px}
+    .ps-bg-badge{display:inline-block;margin-bottom:6px;padding:3px 9px;border-radius:999px;background:var(--surface2);color:var(--aub);font-weight:800;font-size:.72rem}
+    .ps-actions{display:flex;gap:6px;margin-top:10px}
+    .ps-actions button{flex:1;font-size:.76rem;padding:6px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-weight:700}
+    .ps-actions button.on{background:var(--aub);color:#fff;border-color:var(--aub)}
+    .ps-alts{display:none;flex-wrap:wrap;gap:6px;margin-top:8px}
+    .ps-alts.show{display:flex}
+    .ps-alt{width:26px;height:26px;border-radius:6px;border:1px solid rgba(0,0,0,.2);cursor:pointer;padding:0}
+    .ps-row{display:flex;gap:14px;align-items:flex-end;flex-wrap:wrap}
+    .ps-empty{padding:40px;text-align:center;border:2px dashed var(--line);border-radius:var(--r);color:var(--muted)}
+    .ps-brands{position:relative}
+    .ps-brands-btn{width:100%;display:flex;justify-content:space-between;align-items:center;gap:8px;padding:11px 12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink);cursor:pointer;font-weight:700}
+    .ps-brands-btn .ps-brands-caret{color:var(--muted);font-size:.7rem}
+    .ps-brands-panel{display:none;position:absolute;left:0;right:0;top:calc(100% + 6px);z-index:30;background:var(--surface);border:1px solid var(--line);border-radius:14px;box-shadow:0 12px 40px rgba(0,0,0,.35);padding:10px;max-height:360px;overflow:hidden;flex-direction:column}
+    .ps-brands-panel.show{display:flex}
+    .ps-brands-search{width:100%;padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--ink);margin-bottom:6px}
+    .ps-brands-tools{display:flex;justify-content:space-between;gap:8px;margin-bottom:6px}
+    .ps-brands-tools button{background:none;border:none;color:var(--aub);font-weight:800;font-size:.78rem;cursor:pointer;padding:2px 4px}
+    .ps-brands-list{overflow-y:auto;flex:1}
+    .ps-brand-row{display:flex;align-items:center;gap:8px;padding:6px 4px;border-radius:8px;cursor:pointer}
+    .ps-brand-row:hover{background:var(--surface2)}
+    .ps-brand-row input{width:16px;height:16px;flex:none;accent-color:var(--aub)}
+    .ps-brand-row .ps-brand-name{flex:1;font-weight:600;font-size:.86rem}
+    .ps-brand-row .ps-brand-count{color:var(--muted);font-size:.74rem}
+    .ps-brand-hint{color:var(--muted);font-size:.78rem;margin-top:6px}
+    .ps-source{display:flex;gap:6px}
+    .ps-source-btn{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px;border-radius:10px;cursor:pointer;font-weight:800}
+    .ps-source-btn.active{background:var(--aub);color:#fff;border-color:var(--aub)}
+    .ps-source-btn:disabled{opacity:.5;cursor:not-allowed}
+  </style>
+</head>
+<body>
+  <header class="top">
+    <div class="topin">
+      <a class="brand" href="index.html">FiberOS</a>
+      <nav class="nav">
+        <a href="index.html">Home</a>
+        <a href="my-yarns.html">My Yarns</a>
+      </nav>
+      <div class="spacer"></div>
+      <button class="btn ghost small js-help" type="button">Help</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="hero">
+      <div>
+        <span class="pill">Palette Studio</span>
+        <h1>Find your colors</h1>
+        <div class="sub">Build a color scheme from a photo or a starting color, then ground every color in real yarn.</div>
+      </div>
+    </section>
+
+    <div class="ps-modes">
+      <button class="ps-mode active" data-mode="image">From a photo</button>
+      <button class="ps-mode" data-mode="color">From a color</button>
+    </div>
+
+    <div class="grid" style="grid-template-columns:360px minmax(0,1fr);gap:22px;align-items:start">
+      <aside class="card">
+        <!-- IMAGE MODE -->
+        <div id="modeImage">
+          <h3 style="margin-top:0">Start from a photo</h3>
+          <div class="sub" style="margin-bottom:12px">Pick a sample or upload your own. We pull the palette from it.</div>
+          <div class="ps-samples" id="sampleGrid"></div>
+          <div class="field" style="margin-top:14px">
+            <label for="uploadInput">Or upload an image</label>
+            <input id="uploadInput" type="file" accept="image/*">
+          </div>
+        </div>
+        <!-- COLOR MODE -->
+        <div id="modeColor" class="hidden">
+          <h3 style="margin-top:0">Start from a color</h3>
+          <div class="field">
+            <label for="seedColor">Starting color</label>
+            <input id="seedColor" type="color" value="#2f6f48" style="width:100%;height:44px">
+          </div>
+          <div class="field" style="margin-top:12px">
+            <label for="harmonyType">Harmony</label>
+            <select id="harmonyType">
+              <option value="analogous">Analogous (neighbors)</option>
+              <option value="complementary">Complementary (opposite)</option>
+              <option value="triadic">Triadic (three-way)</option>
+              <option value="split">Split complementary</option>
+              <option value="tetradic">Tetradic (four-way)</option>
+            </select>
+          </div>
+          <button class="btn" id="genColorBtn" style="width:100%;margin-top:14px">Generate scheme</button>
+        </div>
+
+        <hr style="border:none;border-top:1px solid var(--line);margin:18px 0">
+        <div class="field">
+          <label for="colorCount">Colors <output id="colorCountVal">5</output></label>
+          <input id="colorCount" class="range" type="range" min="2" max="6" value="5">
+        </div>
+
+        <div class="field">
+          <label>Match colors against</label>
+          <div class="ps-source">
+            <button type="button" class="ps-source-btn active" data-src="library">Full library</button>
+            <button type="button" class="ps-source-btn" data-src="mine" id="srcMine">My yarns</button>
+          </div>
+          <div class="ps-brand-hint" id="srcHint"></div>
+        </div>
+
+        <div class="field ps-brands">
+          <label>Yarn brands you can buy</label>
+          <button type="button" class="ps-brands-btn" id="brandsBtn" aria-expanded="false">
+            <span id="brandsLabel">All brands</span>
+            <span class="ps-brands-caret">▼</span>
+          </button>
+          <button type="button" class="btn secondary small" id="onlyOwnedBtn" style="width:100%;margin-top:8px">Use only brands I own</button>
+          <div class="ps-brands-panel" id="brandsPanel">
+            <input type="text" class="ps-brands-search" id="brandsSearch" placeholder="Search brands…">
+            <div class="ps-brands-tools">
+              <button type="button" id="brandsAll">Select all</button>
+              <button type="button" id="brandsClear">Clear (use all)</button>
+            </div>
+            <div class="ps-brands-list" id="brandsList"><div class="ps-brand-hint">Loading brands…</div></div>
+          </div>
+          <div class="ps-brand-hint">Only these brands get recommended. Leave empty to use every brand.</div>
+        </div>
+      </aside>
+
+      <section>
+        <div class="ps-row" style="justify-content:space-between;margin-bottom:12px">
+          <h3 style="margin:0" id="paletteTitle">Your palette</h3>
+          <div class="row">
+            <button class="btn secondary small" id="addColorBtn" disabled>+ Add color</button>
+            <button class="btn secondary small" id="regenBtn" disabled>Regenerate</button>
+            <button class="btn small" id="savePaletteBtn" disabled>Save palette</button>
+          </div>
+        </div>
+        <div id="swatches" class="ps-swatches"><div class="ps-empty">Pick a photo, a color, or a mood to generate a palette.</div></div>
+      </section>
+    </div>
+  </main>
+
+  <footer class="fx-footer">
+    <div class="fx-footin">
+      <div><strong>FiberOS Palette Studio</strong> — pick colors that play well, grounded in real yarn.</div>
+      <div>Yarn data from <a href="https://temperature-blanket.com/" target="_blank" rel="noopener">temperature-blanket.com</a> (CC BY 4.0). Digital colors are approximate.</div>
+    </div>
+  </footer>
+
+  <div id="colorSearchOverlay" class="cs-overlay">
+    <div class="cs-panel">
+      <div class="cs-head"><h3 style="margin:0">Pick a color from the library</h3><button class="cs-close" id="csClose" aria-label="Close">×</button></div>
+      <div class="cs-filters">
+        <input id="csSearch" type="text" placeholder="Search by color name, brand, or hex…">
+        <select id="csBrand"><option value="">All brands</option></select>
+        <select id="csWeight"><option value="">All weights</option></select>
+      </div>
+      <div class="cs-note">Every color here is a real, buyable yarn from our library.</div>
+      <div class="cs-results" id="csResults"></div>
+    </div>
+  </div>
+  <style>
+    .cs-overlay{position:fixed;inset:0;background:rgba(20,12,22,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
+    .cs-overlay.show{display:flex}
+    .cs-panel{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:18px;max-width:640px;width:100%;max-height:86vh;display:flex;flex-direction:column;box-shadow:0 24px 60px rgba(0,0,0,.45)}
+    .cs-head{display:flex;justify-content:space-between;align-items:center;padding:16px 20px;border-bottom:1px solid var(--line)}
+    .cs-close{border:1px solid var(--line);background:var(--surface2);color:var(--ink);border-radius:10px;width:34px;height:34px;font-size:1.1rem;cursor:pointer}
+    .cs-filters{display:flex;gap:8px;padding:14px 20px 4px;flex-wrap:wrap}
+    .cs-filters input{flex:1;min-width:160px;padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--ink)}
+    .cs-filters select{padding:9px;border:1px solid var(--line);border-radius:10px;background:var(--surface2);color:var(--ink)}
+    .cs-note{color:var(--muted);font-size:.78rem;padding:6px 20px 8px}
+    .cs-results{overflow:auto;padding:6px 20px 18px;display:flex;flex-direction:column;gap:8px}
+    .cs-row{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface);cursor:pointer;text-align:left}
+    .cs-row:hover{border-color:var(--aub)}
+    .cs-row .sw{width:36px;height:36px;border-radius:9px;flex:none;border:1px solid rgba(0,0,0,.2)}
+    .cs-row .info{flex:1;min-width:0}
+    .cs-row .info strong{display:block;line-height:1.2}
+    .cs-row .info small{color:var(--muted)}
+    .ps-actions button.del{color:var(--muted)}
+    .ps-swapmenu{display:none;gap:6px;margin-top:8px}
+    .ps-swapmenu.show{display:flex;flex-wrap:wrap}
+    .ps-swapopt{font-size:.74rem;padding:6px 8px;border-radius:8px;border:1px solid var(--line);background:var(--surface);color:var(--ink);cursor:pointer;font-weight:700;flex:1;min-width:0}
+  </style>
+  <script src="shared.js"></script>
+  <script src="app/sidemenu.js"></script>
+  <script src="app/help.js"></script>
+  <script>
+    window.FiberOSHelp && FiberOSHelp.init({
+      title: 'Palette Studio — how this page works',
+      intro: 'Build a color scheme grounded in real, buyable yarn.',
+      sections: [
+        { h: 'Start a palette', p: 'Pull colors From a photo (pick a sample or upload your own) or From a color (choose a starting color and a harmony like complementary or analogous). Use the Colors slider to set how many.' },
+        { h: 'Grounded in real yarn', p: 'Every color is matched to a real yarn. Each swatch shows the yarn name, brand, line, and weight, and the background color is called out.' },
+        { h: 'Lock, Swap, Regenerate', p: 'Lock a color you love so it stays put. Swap opens nearby yarn alternatives to pick a different real yarn. Regenerate re-rolls the unlocked colors.' },
+        { h: 'Match against and brands', p: 'Choose to match against the Full library or just My yarns. Limit results to the yarn brands you can buy, or use "only brands I own". Your brand choice applies across the whole app.' }
+      ]
+    });
+  </script>
+  <script src="app/palette-engine.js"></script>
+  <script src="app/brand-filter.js"></script>
+  <script src="app/my-yarns.js"></script>
+  <script src="app/yarn-weights.js"></script>
+  <script src="app/palettes.js"></script>
+  <script src="yarn-api.js"></script>
+  <script>
+    var P = window.FiberOSPalette;
+    var state = { mode: 'image', lastKind: null, lastArg: null, slots: [] };
+    var yarns = [], yarnsReady = false, yarnLoad = null;
+    var samples = [
+      { file: 'yarn-balls.jpg', label: 'Yarn balls' },
+      { file: 'beagle.jpg', label: 'Beagle' },
+      { file: 'dog.svg', label: 'Dog' },
+      { file: 'clip1.svg', label: 'Cat' },
+      { file: 'clip2.svg', label: 'Abstract waves' },
+      { file: 'clip3.svg', label: 'Food illustration' }
+    ];
+
+    function $(id){ return document.getElementById(id); }
+    function count(){ return +$('colorCount').value; }
+
+    // ---- mode switch ----
+    document.querySelectorAll('.ps-mode').forEach(function(b){
+      b.onclick = function(){
+        state.mode = b.dataset.mode;
+        document.querySelectorAll('.ps-mode').forEach(function(x){ x.classList.toggle('active', x===b); });
+        $('modeImage').classList.toggle('hidden', state.mode!=='image');
+        $('modeColor').classList.toggle('hidden', state.mode!=='color');
+      };
+    });
+
+    // ---- samples ----
+    var grid = $('sampleGrid');
+    samples.forEach(function(s){
+      var b = document.createElement('button');
+      b.className = 'ps-sample';
+      b.innerHTML = '<img alt="'+s.label+'" src="samples/'+s.file+'">';
+      b.onclick = function(){ paletteFromImageSrc('samples/'+s.file); };
+      grid.appendChild(b);
+    });
+    $('uploadInput').onchange = function(e){
+      var f = e.target.files[0]; if(!f) return;
+      var r = new FileReader(); r.onload = function(){ paletteFromImageSrc(r.result); }; r.readAsDataURL(f);
+    };
+
+    function paletteFromImageSrc(src){
+      var img = new Image();
+      img.onload = function(){
+        var cv = document.createElement('canvas'); var w = 160, h = Math.max(1, Math.round(160*img.height/img.width));
+        cv.width = w; cv.height = h;
+        var ctx = cv.getContext('2d'); ctx.drawImage(img, 0, 0, w, h);
+        var pal = P.extractFromImageData(ctx.getImageData(0,0,w,h), count());
+        state.lastKind = 'image'; state.lastArg = src;
+        generateFrom(P.withBackground(pal, { byWeight:true }));
+      };
+      img.src = src;
+    }
+
+    $('genColorBtn').onclick = function(){
+      state.lastKind = 'harmony'; state.lastArg = { seed: $('seedColor').value, type: $('harmonyType').value };
+      generateFrom(P.withBackground(P.harmony(state.lastArg.seed, state.lastArg.type, count())));
+    };
+
+    // ---- count + regenerate ----
+    $('colorCount').oninput = function(){ $('colorCountVal').textContent = count(); if(state.lastKind) reGenerateScheme(); };
+    $('regenBtn').onclick = reshuffleYarns;
+    function reGenerateScheme(){
+      if(state.lastKind==='image') paletteFromImageSrc(state.lastArg);
+      else if(state.lastKind==='harmony') generateFrom(P.withBackground(P.harmony(state.lastArg.seed, state.lastArg.type, count())));
+    }
+
+    // ---- brand filter (only recommend yarns from brands the user can buy) ----
+    // Backed by the shared, app-wide FiberOSBrands store (localStorage).
+    var Brands = window.FiberOSBrands;
+    var My = window.FiberOSMyYarns;
+    var sourceMode = 'library';            // 'library' = full DB, 'mine' = personal stash
+
+    function pool(){
+      if(sourceMode === 'mine'){
+        var mine = My.list();
+        if(mine.length){ var f = Brands.filter(mine); return f.length ? f : mine; }
+      }
+      return Brands.filter(yarns);
+    }
+    function updateBrandLabel(){
+      var n = Brands.size();
+      $('brandsLabel').textContent = n ? (n + (n === 1 ? ' brand' : ' brands')) : 'All brands';
+    }
+    function refreshSourceUI(){
+      var owned = My.count();
+      $('srcMine').textContent = owned ? ('My yarns (' + owned + ')') : 'My yarns';
+      $('srcMine').disabled = !owned;
+      $('onlyOwnedBtn').disabled = !owned;
+      if(!owned && sourceMode === 'mine'){ sourceMode = 'library'; syncSourceButtons(); }
+      $('srcHint').innerHTML = owned
+        ? (sourceMode === 'mine' ? 'Matching only against the ' + owned + ' yarn' + (owned===1?'':'s') + ' in your stash.' : '')
+        : 'No saved yarns yet. <a href="my-yarns.html">Build your stash</a> to match against yarn you own.';
+    }
+    function syncSourceButtons(){
+      document.querySelectorAll('.ps-source-btn').forEach(function(x){ x.classList.toggle('active', x.dataset.src === sourceMode); });
+    }
+
+    // ---- yarn library (ground every color in a real, buyable yarn) ----
+    if(window.FiberOSYarnAPI){
+      yarnLoad = window.FiberOSYarnAPI.load()
+        .then(function(d){ yarns = d.colorways.filter(function(y){ return y.hex && !y.unavailable; }); yarnsReady = true; buildBrandList(); })
+        .catch(function(){ yarnsReady = false; $('brandsList').innerHTML = '<div class="ps-brand-hint">Yarn data unavailable.</div>'; });
+    }
+    function ensureYarns(cb){ if(yarnsReady) cb(); else if(yarnLoad) yarnLoad.then(cb); else cb(); }
+    function nearestYarns(hex, n){
+      var src = pool();
+      var out = src.map(function(y){ return { y:y, d:P.distance(hex, y.hex) }; });
+      out.sort(function(a,b){ return a.d - b.d; });
+      return out.slice(0, n).map(function(s){ return s.y; });
+    }
+
+    // Re-match the current palette to the selected brands. Locked slots keep their yarn.
+    function applyBrandFilter(){
+      updateBrandLabel();
+      if(!state.slots.length) return;
+      state.slots.forEach(function(s){
+        s.alts = nearestYarns(s.source, 16);
+        if(!s.locked){ s.altIndex = 0; s.yarn = s.alts[0] || s.yarn; }
+      });
+      render();
+    }
+
+    // Build the searchable brand checklist from loaded yarn data.
+    function buildBrandList(){
+      var counts = {};
+      yarns.forEach(function(y){ counts[y.brandName] = (counts[y.brandName] || 0) + 1; });
+      var names = Object.keys(counts).sort(function(a,b){ return a.localeCompare(b); });
+      var list = $('brandsList'); list.innerHTML = '';
+      names.forEach(function(name){
+        var row = document.createElement('label'); row.className = 'ps-brand-row'; row.dataset.name = name.toLowerCase();
+        var cb = document.createElement('input'); cb.type = 'checkbox'; cb.checked = Brands.has(name);
+        cb.onchange = function(){ if(cb.checked) Brands.add(name); else Brands.remove(name); applyBrandFilter(); };
+        var nm = document.createElement('span'); nm.className = 'ps-brand-name'; nm.textContent = name;
+        var ct = document.createElement('span'); ct.className = 'ps-brand-count'; ct.textContent = counts[name];
+        row.appendChild(cb); row.appendChild(nm); row.appendChild(ct);
+        list.appendChild(row);
+      });
+      updateBrandLabel();
+    }
+
+    // ---- brand panel open/close, search, select-all/clear ----
+    $('brandsBtn').onclick = function(e){
+      e.stopPropagation();
+      var open = $('brandsPanel').classList.toggle('show');
+      $('brandsBtn').setAttribute('aria-expanded', open ? 'true' : 'false');
+    };
+    $('brandsPanel').onclick = function(e){ e.stopPropagation(); };
+    document.addEventListener('click', function(){ $('brandsPanel').classList.remove('show'); $('brandsBtn').setAttribute('aria-expanded','false'); });
+    $('brandsSearch').oninput = function(){
+      var q = this.value.trim().toLowerCase();
+      document.querySelectorAll('#brandsList .ps-brand-row').forEach(function(r){
+        r.style.display = r.dataset.name.indexOf(q) >= 0 ? '' : 'none';
+      });
+    };
+    $('brandsAll').onclick = function(){
+      var all = {}; yarns.forEach(function(y){ all[y.brandName] = 1; });
+      Brands.set(Object.keys(all));
+      document.querySelectorAll('#brandsList input').forEach(function(c){ c.checked = true; });
+      applyBrandFilter();
+    };
+    $('brandsClear').onclick = function(){
+      Brands.clear();
+      document.querySelectorAll('#brandsList input').forEach(function(c){ c.checked = false; });
+      applyBrandFilter();
+    };
+
+    // ---- source toggle (full library vs my stash) ----
+    document.querySelectorAll('.ps-source-btn').forEach(function(b){
+      b.onclick = function(){
+        if(b.disabled) return;
+        sourceMode = b.dataset.src;
+        syncSourceButtons(); refreshSourceUI(); applyBrandFilter();
+      };
+    });
+    // ---- "use only brands I own": narrow the global brand filter to owned brands ----
+    $('onlyOwnedBtn').onclick = function(){
+      var owned = My.brandsIn();
+      if(!owned.length) return;
+      Brands.set(owned);
+      document.querySelectorAll('#brandsList input').forEach(function(c){
+        c.checked = Brands.has(c.parentElement.querySelector('.ps-brand-name').textContent);
+      });
+      applyBrandFilter();
+    };
+    // Keep the stash-dependent UI live if the user edits their stash in another tab.
+    My.onChange(refreshSourceUI);
+    window.addEventListener('focus', refreshSourceUI);
+    refreshSourceUI();
+
+    // Build slots from a set of colors, matching each to its nearest real yarn.
+    function generateFrom(result){
+      ensureYarns(function(){
+        state.slots = result.colors.map(function(hex, i){
+          var alts = yarnsReady ? nearestYarns(hex, 16) : [];
+          return { source: hex, alts: alts, altIndex: 0, yarn: alts[0] || null, locked: false, isBg: i === result.backgroundIndex };
+        });
+        render();
+      });
+    }
+
+    // Regenerate: give each unlocked color a different nearby yarn.
+    function reshuffleYarns(){
+      ensureYarns(function(){
+        state.slots.forEach(function(s){
+          if(s.locked || s.alts.length < 2) return;
+          s.altIndex = (s.altIndex + 1) % Math.min(s.alts.length, 8);
+          s.yarn = s.alts[s.altIndex];
+        });
+        render();
+      });
+    }
+
+    function esc(x){ return String(x==null?'':x).replace(/[&<>"]/g, function(c){ return ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;' })[c]; }); }
+    function yarnWeight(y){ var w = window.FiberOSWeights.name(y.yarnWeightId || y.weightId); return w === 'Unspecified' ? '' : w; }
+
+    function render(){
+      var box = $('swatches'); box.innerHTML = '';
+      if(!state.slots.length){ box.innerHTML = '<div class="ps-empty">Pick a photo, a color, or a mood to generate a palette.</div>'; $('regenBtn').disabled = true; $('savePaletteBtn').disabled = true; $('addColorBtn').disabled = true; return; }
+      state.slots.forEach(function(s, i){
+        var y = s.yarn, chip = y ? y.hex : s.source;
+        var el = document.createElement('div'); el.className = 'ps-swatch' + (s.locked ? ' locked' : '');
+        el.innerHTML =
+          '<div class="ps-chip" style="background:'+chip+'"></div>' +
+          '<div class="ps-meta">' +
+            (s.isBg ? '<span class="ps-bg-badge">Background</span>' : '') +
+            '<div class="ps-yarn">' + (y ? esc(y.name) : 'Matching…') + '</div>' +
+            '<div class="sub" style="font-size:.78rem">' + (y ? esc(y.brandName) + (y.yarnName ? ' · ' + esc(y.yarnName) : '') + (yarnWeight(y) ? ' · ' + esc(yarnWeight(y)) : '') : '') + '</div>' +
+            '<div class="ps-hex">' + chip.toUpperCase() + '</div>' +
+            '<div class="ps-actions"><button class="lk' + (s.locked ? ' on' : '') + '">' + (s.locked ? 'Locked' : 'Lock') + '</button><button class="sw">Swap</button><button class="del" title="Remove this color">Delete</button></div>' +
+            '<div class="ps-swapmenu"></div>' +
+            '<div class="ps-alts"></div>' +
+          '</div>';
+        el.querySelector('.lk').onclick = function(){ s.locked = !s.locked; render(); };
+        el.querySelector('.sw').onclick = function(){ toggleSwap(el, i); };
+        el.querySelector('.del').onclick = function(){ deleteSlot(i); };
+        box.appendChild(el);
+      });
+      $('regenBtn').disabled = false; $('savePaletteBtn').disabled = false;
+      $('addColorBtn').disabled = state.slots.length >= MAX_COLORS;
+      $('addColorBtn').title = state.slots.length >= MAX_COLORS ? 'A palette holds up to ' + MAX_COLORS + ' colors' : 'Add another color from the library';
+    }
+
+    // Delete a color from the palette (keep at least 2).
+    function deleteSlot(i){
+      if(state.slots.length <= 2){ alert('A palette needs at least 2 colors.'); return; }
+      state.slots.splice(i, 1); render();
+    }
+
+    // Swap opens two choices: a similar color from another brand, or pick a
+    // different color entirely from the library.
+    function toggleSwap(el, i){
+      var menu = el.querySelector('.ps-swapmenu');
+      var panel = el.querySelector('.ps-alts');
+      if(menu.classList.contains('show')){ menu.classList.remove('show'); menu.innerHTML=''; panel.classList.remove('show'); panel.innerHTML=''; return; }
+      menu.innerHTML =
+        '<button class="ps-swapopt swb">Similar color, other brand</button>' +
+        '<button class="ps-swapopt swc">Pick a different color…</button>';
+      menu.querySelector('.swb').onclick = function(){ showBrandAlts(el, i); };
+      menu.querySelector('.swc').onclick = function(){ openColorSearch(i); };
+      menu.classList.add('show');
+    }
+
+    // "Similar color, other brand": nearest yarns to this color from other brands
+    // (one per brand, closest first).
+    function showBrandAlts(el, i){
+      var s = state.slots[i]; var panel = el.querySelector('.ps-alts'); panel.innerHTML = '';
+      var curBrand = s.yarn ? s.yarn.brandName : '';
+      var ranked = pool().map(function(y){ return { y:y, d:P.distance(s.source, y.hex) }; }).sort(function(a,b){ return a.d-b.d; });
+      var seen = {}, picks = [];
+      for(var k=0; k<ranked.length && picks.length<12; k++){
+        var y = ranked[k].y;
+        if(y.brandName === curBrand) continue;
+        if(seen[y.brandName]) continue;
+        seen[y.brandName] = 1; picks.push(y);
+      }
+      if(!picks.length){ panel.innerHTML = '<div class="sub" style="font-size:.78rem">No other-brand matches in the current filter.</div>'; panel.classList.add('show'); return; }
+      picks.forEach(function(y){
+        var a = document.createElement('button'); a.className = 'ps-alt'; a.style.background = y.hex; a.title = y.name + ' · ' + y.brandName + ' (' + y.hex.toUpperCase() + ')';
+        a.onclick = function(){ s.yarn = y; render(); };
+        panel.appendChild(a);
+      });
+      panel.classList.add('show');
+    }
+
+    // Recommended ceiling for a palette: past this it gets muddy to read and heavy to
+    // crochet (you carry a real strand per color). 12 stays fast and workable.
+    var MAX_COLORS = 12;
+    $('addColorBtn').onclick = function(){ if(state.slots.length < MAX_COLORS) openColorSearch(-1); };
+
+    // ---- "Pick a different color" library search (real yarns only) ----
+    var csSlot = null, csReady = false;
+    function initColorSearch(){
+      if(csReady) return;
+      var bsel = $('csBrand'), wsel = $('csWeight');
+      var brands = {}; yarns.forEach(function(y){ brands[y.brandName] = 1; });
+      Object.keys(brands).sort().forEach(function(b){ var o = document.createElement('option'); o.value = b; o.textContent = b; bsel.appendChild(o); });
+      window.FiberOSWeights.names().forEach(function(n){ var o = document.createElement('option'); o.value = n; o.textContent = n; wsel.appendChild(o); });
+      var deb = function(){ clearTimeout(deb._t); deb._t = setTimeout(runColorSearch, 90); };
+      $('csSearch').oninput = deb; bsel.onchange = runColorSearch; wsel.onchange = runColorSearch;
+      $('csClose').onclick = closeColorSearch;
+      $('colorSearchOverlay').addEventListener('click', function(e){ if(e.target === this) closeColorSearch(); });
+      csReady = true;
+    }
+    function openColorSearch(i){
+      ensureYarns(function(){
+        if(!yarnsReady) return;
+        initColorSearch();
+        csSlot = i;
+        $('csSearch').value = ''; $('csBrand').value = ''; $('csWeight').value = '';
+        runColorSearch();
+        $('colorSearchOverlay').classList.add('show');
+        $('csSearch').focus();
+      });
+    }
+    function closeColorSearch(){ $('colorSearchOverlay').classList.remove('show'); }
+    function runColorSearch(){
+      var q = $('csSearch').value.trim().toLowerCase();
+      var brand = $('csBrand').value, weight = $('csWeight').value;
+      var rows = yarns.filter(function(y){
+        if(brand && y.brandName !== brand) return false;
+        if(weight && window.FiberOSWeights.name(y.yarnWeightId) !== weight) return false;
+        if(q && (y.name + ' ' + y.brandName + ' ' + (y.yarnName || '') + ' ' + y.hex).toLowerCase().indexOf(q) < 0) return false;
+        return true;
+      });
+      if(!q && !brand && !weight && csSlot != null && state.slots[csSlot]){
+        var src = state.slots[csSlot].source;
+        rows = rows.slice().sort(function(a,b){ return P.distance(src, a.hex) - P.distance(src, b.hex); });
+      }
+      rows = rows.slice(0, 60);
+      var box = $('csResults');
+      if(!rows.length){ box.innerHTML = '<div class="sub">No yarns match those filters.</div>'; return; }
+      box.innerHTML = '';
+      rows.forEach(function(y){
+        var wl = yarnWeight(y);
+        var el = document.createElement('button'); el.className = 'cs-row';
+        el.innerHTML = '<span class="sw" style="background:' + y.hex + '"></span><div class="info"><strong>' + esc(y.name) + '</strong><small>' + esc(y.brandName) + (y.yarnName ? ' · ' + esc(y.yarnName) : '') + (wl ? ' · ' + esc(wl) : '') + ' · ' + y.hex.toUpperCase() + '</small></div>';
+        el.onclick = function(){ applyColorPick(y); };
+        box.appendChild(el);
+      });
+    }
+    function applyColorPick(y){
+      if(csSlot === -1){
+        if(state.slots.length >= MAX_COLORS){ closeColorSearch(); return; }
+        state.slots.push({ source: y.hex, alts: nearestYarns(y.hex, 16), altIndex: 0, yarn: y, locked: false, isBg: false });
+      } else {
+        var s = state.slots[csSlot]; if(!s){ closeColorSearch(); return; }
+        s.yarn = y; s.source = y.hex; s.altIndex = 0; s.alts = nearestYarns(y.hex, 16);
+      }
+      closeColorSearch(); render();
+    }
+
+    // Save the current palette: exact yarns + the rules that were active when made.
+    $('savePaletteBtn').onclick = function(){
+      if(!state.slots.length) return;
+      var name = prompt('Name this palette:', suggestPaletteName());
+      if(name === null) return; // cancelled
+      var colors = state.slots.map(function(s){
+        var y = s.yarn || {};
+        return {
+          source: s.source,
+          isBg: !!s.isBg,
+          name: y.name || '',
+          brandName: y.brandName || '',
+          yarnName: y.yarnName || '',
+          hex: (y.hex || s.source || '').toUpperCase(),
+          weightId: y.yarnWeightId || y.weightId || '',
+          href: y.href || ''
+        };
+      });
+      var saved = window.FiberOSPalettes.save({
+        name: (name || '').trim() || suggestPaletteName(),
+        status: 'concept',
+        colors: colors,
+        rules: {
+          brands: (window.FiberOSBrands ? window.FiberOSBrands.get() : []),
+          sourceMode: sourceMode,
+          colorCount: count()
+        }
+      });
+      showSavedToast(saved.name);
+    };
+
+    function suggestPaletteName(){
+      var n = window.FiberOSPalettes.count() + 1;
+      if(state.lastKind === 'image') return 'Photo palette ' + n;
+      if(state.lastKind === 'harmony') return 'Color palette ' + n;
+      return 'Palette ' + n;
+    }
+
+    // Lightweight confirmation toast with a link to the home dashboard.
+    function showSavedToast(name){
+      var t = document.getElementById('psToast');
+      if(!t){
+        t = document.createElement('div'); t.id = 'psToast';
+        t.style.cssText = 'position:fixed;left:50%;bottom:22px;transform:translateX(-50%);z-index:9999;background:var(--surface2);color:var(--ink);border:1px solid var(--aub);border-radius:12px;padding:12px 16px;box-shadow:0 12px 30px rgba(0,0,0,.35);font-weight:700;display:flex;gap:12px;align-items:center';
+        document.body.appendChild(t);
+      }
+      t.innerHTML = 'Saved “' + esc(name) + '”. <a href="index.html" style="color:var(--aub);font-weight:800">View on Home →</a>';
+      t.style.opacity = '1';
+      clearTimeout(showSavedToast._t);
+      showSavedToast._t = setTimeout(function(){ t.style.opacity = '0'; t.style.transition = 'opacity .4s'; }, 4200);
+    }
+  </script>
+</body>
+</html>
