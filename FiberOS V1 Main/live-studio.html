@@ -1,0 +1,319 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+  <title>FiberOS — Live Studio</title>
+  <link rel="stylesheet" href="shared.css">
+  <link rel="stylesheet" href="fiberos-green.css">
+  <style>
+    /* Live Studio: a distraction-free, full-screen follow-along view. Dark by design so
+       the active row pops. Reuses the app's project data; it never edits the design. */
+    :root{ --ls-bg:#181310; --ls-panel:#241d17; --ls-line:#463729; --ls-ink:#f2ebe0; --ls-muted:#c8b7a3; --ls-accent:#2f8a5b; --ls-ring:#ffd36b; }
+    html,body{height:100%}
+    body.ls-body{margin:0;background:var(--ls-bg);color:var(--ls-ink);font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",sans-serif;overflow:hidden}
+    .ls-app{display:flex;flex-direction:column;height:100vh;height:100dvh}
+    /* Top control bar */
+    .ls-top{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:10px 16px;background:var(--ls-panel);border-bottom:1px solid var(--ls-line)}
+    .ls-top .ls-title{font-weight:800;font-size:1.05rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:36vw}
+    .ls-spacer{flex:1}
+    .ls-ctl{display:flex;align-items:center;gap:8px}
+    .ls-ctl label{color:var(--ls-muted);font-size:.85rem;font-weight:700}
+    .ls-btn{border:1px solid var(--ls-line);background:#302518;color:var(--ls-ink);border-radius:12px;padding:10px 14px;font-weight:700;cursor:pointer;font-size:1rem}
+    .ls-btn:hover{background:#3a2c1d}
+    .ls-btn.ghost{background:transparent}
+    .ls-seg{display:inline-flex;border:1px solid var(--ls-line);border-radius:12px;overflow:hidden}
+    .ls-seg button{border:none;background:transparent;color:var(--ls-ink);padding:9px 12px;font-weight:700;cursor:pointer;font-size:.95rem}
+    .ls-seg button.on{background:var(--ls-accent);color:#fff}
+    .ls-select{border:1px solid var(--ls-line);background:#302518;color:var(--ls-ink);border-radius:10px;padding:9px 10px;font-weight:700}
+    .ls-check{display:inline-flex;align-items:center;gap:7px;color:var(--ls-muted);font-weight:700;font-size:.9rem;cursor:pointer}
+    .ls-check input{width:18px;height:18px;accent-color:var(--ls-accent)}
+    /* Main: grid + counts */
+    .ls-main{flex:1;min-height:0;display:flex;gap:14px;padding:14px 16px}
+    .ls-gridwrap{flex:1;min-width:0;overflow:auto;background:#0d0a08;border:1px solid var(--ls-line);border-radius:16px;display:flex;justify-content:center;align-items:flex-start}
+    #lsCanvas{display:block;image-rendering:pixelated}
+    .ls-counts{width:300px;flex:none;background:var(--ls-panel);border:1px solid var(--ls-line);border-radius:16px;padding:14px;overflow:auto}
+    .ls-counts h2{margin:0 0 2px;font-size:1.15rem}
+    .ls-rowmeta{color:var(--ls-muted);font-size:.85rem;margin-bottom:12px}
+    .ls-run{display:flex;align-items:center;gap:10px;padding:9px 8px;border-radius:10px}
+    .ls-run + .ls-run{border-top:1px solid var(--ls-line)}
+    .ls-run .sw{width:26px;height:26px;border-radius:7px;border:1px solid rgba(255,255,255,.25);flex:none;display:grid;place-items:center;font-size:.9rem;color:#111}
+    .ls-run .cnt{font-weight:800;font-size:1.05rem;min-width:34px}
+    .ls-run .nm{font-weight:600}
+    /* Bottom row navigator */
+    .ls-bottom{display:flex;align-items:center;gap:14px;padding:12px 16px;background:var(--ls-panel);border-top:1px solid var(--ls-line)}
+    .ls-nav{flex:none;border:none;border-radius:14px;padding:16px 22px;font-weight:800;font-size:1.1rem;cursor:pointer;background:var(--ls-accent);color:#fff;min-width:150px}
+    .ls-nav.secondary{background:#302518;color:var(--ls-ink);border:1px solid var(--ls-line)}
+    .ls-nav:disabled{opacity:.4;cursor:not-allowed}
+    .ls-progress{flex:1;min-width:0}
+    .ls-progress .ls-rownum{font-weight:800;font-size:1.1rem}
+    .ls-progress .ls-dir{color:var(--ls-muted);font-weight:700;margin-left:8px}
+    .ls-bar{height:10px;border-radius:999px;background:#0d0a08;border:1px solid var(--ls-line);margin-top:6px;overflow:hidden}
+    .ls-bar > i{display:block;height:100%;background:var(--ls-accent)}
+    .ls-empty{margin:auto;text-align:center;color:var(--ls-muted);padding:40px}
+    .ls-empty a{color:#7fd0a4;font-weight:800}
+    @media (max-width: 820px){
+      .ls-main{flex-direction:column}
+      .ls-counts{width:auto;order:-1;max-height:34vh}
+      .ls-top .ls-title{max-width:100%}
+    }
+  </style>
+</head>
+<body class="ls-body">
+  <div class="ls-app" id="lsApp">
+    <div class="ls-top">
+      <a class="ls-btn ghost" id="lsExit" href="my-studio.html">← Exit</a>
+      <span class="ls-title" id="lsTitle">Live Studio</span>
+      <span class="ls-spacer"></span>
+      <div class="ls-ctl">
+        <label>Show</label>
+        <div class="ls-seg" id="lsDisplay">
+          <button data-mode="color" class="on">Color</button>
+          <button data-mode="symbol">Symbol</button>
+          <button data-mode="both">Both</button>
+        </div>
+      </div>
+      <label class="ls-check"><input type="checkbox" id="lsGridToggle" checked> Grid lines</label>
+      <select class="ls-select" id="lsGridColor" title="Grid line color">
+        <option value="auto">Auto lines</option>
+        <option value="dark">Dark lines</option>
+        <option value="light">Light lines</option>
+      </select>
+      <div class="ls-ctl">
+        <label>Size</label>
+        <button class="ls-btn" id="lsZoomOut" title="Smaller cells">−</button>
+        <button class="ls-btn" id="lsZoomIn" title="Bigger cells">+</button>
+        <button class="ls-btn" id="lsFit" title="Fit width">Fit</button>
+      </div>
+    </div>
+
+    <div class="ls-main" id="lsMain">
+      <div class="ls-gridwrap" id="lsGridWrap"><canvas id="lsCanvas"></canvas></div>
+      <aside class="ls-counts" id="lsCounts"></aside>
+    </div>
+
+    <div class="ls-bottom">
+      <button class="ls-nav secondary" id="lsPrev">▼ Previous</button>
+      <div class="ls-progress">
+        <span class="ls-rownum" id="lsRowNum">Row 1 of 1</span>
+        <span class="ls-dir" id="lsDir"></span>
+        <div class="ls-bar"><i id="lsBar" style="width:0%"></i></div>
+      </div>
+      <button class="ls-nav" id="lsNext">Next ▲</button>
+    </div>
+  </div>
+
+  <script src="shared.js"></script>
+  <script src="app/yarn-weights.js"></script>
+  <script src="app/project-schema.js"></script>
+  <script src="app/project-migrate.js"></script>
+  <script src="app/project-repository.js"></script>
+  <script>
+  (function(){
+    'use strict';
+    function $(id){ return document.getElementById(id); }
+    function norm(h){ h=String(h==null?'':h).trim(); if(!h) return '#000000'; if(h[0]!=='#') h='#'+h; return h.toUpperCase(); }
+    function isBg(hex){ var h=norm(hex); return h==='#FFFFFF' || h==='#FFF' || h==='#FFFAF6'; }
+    function lum(hex){ var h=norm(hex).replace('#',''); if(h.length===3) h=h.split('').map(function(c){return c+c;}).join(''); var r=parseInt(h.slice(0,2),16)||0,g=parseInt(h.slice(2,4),16)||0,b=parseInt(h.slice(4,6),16)||0; return (.299*r+.587*g+.114*b); }
+    function ink(hex){ return lum(hex) > 150 ? '#1a1a1a' : '#ffffff'; }
+
+    // ---- Load the active project. My Studio sets the rich V1 active; the editor sets the
+    // legacy active. A one-shot flag tells us which the user just launched from so we always
+    // open the freshest design. ----
+    function fromV1(){
+      var Repo = window.FiberOSRepo, p = null;
+      try { p = Repo && Repo.getActive ? Repo.getActive() : null; } catch(e){}
+      if (p && p.chart && Array.isArray(p.chart.grid) && p.chart.grid.length) {
+        return { id: p.id || 'active', name: p.name || 'Untitled design', grid: p.chart.grid,
+          rowDirection: (p.chart && p.chart.rowDirection) || 'odd-rtl', paletteRaw: (p.palette || []) };
+      }
+      return null;
+    }
+    function fromLegacy(){
+      var legacy = null;
+      try { legacy = JSON.parse(localStorage.getItem('fiberosActiveProject') || 'null'); } catch(e){}
+      if (legacy && Array.isArray(legacy.grid) && legacy.grid.length) {
+        return { id: legacy.id || 'active', name: legacy.name || 'Untitled design', grid: legacy.grid,
+          rowDirection: legacy.rowDirection || 'odd-rtl',
+          paletteRaw: (legacy.palette || []).map(function(e){ return { chartHex: e.hex || e.chartHex, displayName: e.name || e.displayName, symbol: e.symbol }; }) };
+      }
+      return null;
+    }
+    function loadProject(){
+      var from = ''; try { from = sessionStorage.getItem('fiberos_live_from') || ''; } catch(e){}
+      return from === 'editor' ? (fromLegacy() || fromV1()) : (fromV1() || fromLegacy());
+    }
+
+    var proj = loadProject();
+    if (!proj) {
+      $('lsMain').innerHTML = '<div class="ls-empty">No design is open yet.<br><br>Open one from <a href="my-studio.html">My Studio</a> (tap “Work on this”) or from the Tapestry Studio editor.</div>';
+      $('lsPrev').disabled = true; $('lsNext').disabled = true;
+      return;
+    }
+
+    var grid = proj.grid;
+    var nRows = grid.length;
+    var nCols = grid.reduce(function(m,r){ return Math.max(m, r.length); }, 0);
+    var rowDir = proj.rowDirection === 'odd-ltr' ? 'odd-ltr' : 'odd-rtl';
+    $('lsTitle').textContent = 'Live Studio — ' + proj.name;
+
+    // ---- Color/symbol map (fill missing symbols + names so Symbol view always works) ----
+    var SYMBOLS = (window.FiberOSSchema && FiberOSSchema.SYMBOLS) || ['●','▲','■','◆','✚','✦','○','△','□','◇','✕','✱','⬟','⬢','▰','▱'];
+    var colorMap = {};
+    (proj.paletteRaw || []).forEach(function(e){
+      var hex = norm(e.chartHex || e.hex);
+      if (!hex) return;
+      colorMap[hex] = { hex: hex, name: (e.displayName || e.name || '').trim(), symbol: (e.symbol || '').trim() };
+    });
+    // distinct grid colors, most-used first (stable symbol assignment)
+    var counts = {};
+    for (var y=0;y<nRows;y++){ var row=grid[y]; for (var x=0;x<row.length;x++){ var k=norm(row[x]); counts[k]=(counts[k]||0)+1; } }
+    var order = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
+    var symIdx = 0, colIdx = 0;
+    order.forEach(function(hex){
+      if (!colorMap[hex]) colorMap[hex] = { hex:hex, name:'', symbol:'' };
+      if (!colorMap[hex].symbol){ colorMap[hex].symbol = SYMBOLS[symIdx % SYMBOLS.length]; symIdx++; }
+      if (!colorMap[hex].name){ colorMap[hex].name = isBg(hex) ? 'Background' : ('Color ' + (++colIdx)); }
+    });
+    function info(hex){ var k=norm(hex); return colorMap[k] || { hex:k, name:k, symbol:'' }; }
+
+    // ---- Row model. Crochet row 1 = bottom = grid[nRows-1]; rows go up. ----
+    function gridIndex(rowNum){ return nRows - rowNum; }
+    function rowIsRTL(rowNum){ var isOdd = (rowNum % 2)===1; return (rowDir==='odd-rtl') ? isOdd : !isOdd; }
+    function rowRuns(rowNum){
+      var cells = (grid[gridIndex(rowNum)] || []).slice();
+      if (rowIsRTL(rowNum)) cells.reverse(); // read in the order you crochet it
+      var runs = [];
+      cells.forEach(function(hex){
+        var it = info(hex); var last = runs[runs.length-1];
+        if (last && last.hex === it.hex) last.count++;
+        else runs.push({ hex: it.hex, name: it.name, symbol: it.symbol, count: 1 });
+      });
+      return runs;
+    }
+
+    // ---- State ----
+    var LKEY = 'fiberos.live.' + proj.id;
+    var current = clampRow(parseInt(localStorage.getItem(LKEY), 10) || 1);
+    var mode = 'color';           // color | symbol | both
+    var showGrid = true;
+    var gridColorMode = 'auto';   // auto | dark | light
+    var cell = 0;                 // px, 0 = fit width
+    function clampRow(n){ return Math.max(1, Math.min(nRows, n || 1)); }
+    function saveProgress(){ try { localStorage.setItem(LKEY, String(current)); } catch(e){} }
+
+    // ---- Sizing ----
+    function fitCell(){ var wrap=$('lsGridWrap'); var avail = wrap.clientWidth - 4; return Math.max(6, Math.min(64, Math.floor(avail / Math.max(1,nCols)))); }
+    function effectiveCell(){ return cell > 0 ? cell : fitCell(); }
+
+    // ---- Draw ----
+    var canvas = $('lsCanvas'), ctx = canvas.getContext('2d');
+    function alphaFor(rowNum){ if (rowNum===current) return 1; var d=Math.abs(rowNum-current); return d===1 ? 0.42 : 0.07; }
+    function gridStroke(hex){
+      if (gridColorMode==='dark') return 'rgba(0,0,0,.5)';
+      if (gridColorMode==='light') return 'rgba(255,255,255,.5)';
+      return lum(hex) > 150 ? 'rgba(0,0,0,.28)' : 'rgba(255,255,255,.28)';
+    }
+    function draw(){
+      var c = effectiveCell();
+      canvas.width = nCols * c; canvas.height = nRows * c;
+      ctx.clearRect(0,0,canvas.width,canvas.height);
+      ctx.textAlign='center'; ctx.textBaseline='middle';
+      var fpx = Math.max(7, Math.floor(c*0.62));
+      ctx.font = '700 ' + fpx + 'px Inter, system-ui, sans-serif';
+      for (var gi=0; gi<nRows; gi++){
+        var rowNum = nRows - gi;
+        var a = alphaFor(rowNum);
+        var row = grid[gi];
+        for (var x=0; x<nCols; x++){
+          var hex = norm(row[x] != null ? row[x] : '#FFFAF6');
+          var px = x*c, py = gi*c;
+          ctx.globalAlpha = a;
+          ctx.fillStyle = (mode==='symbol') ? '#fbf7f0' : hex;
+          ctx.fillRect(px, py, c, c);
+          if (showGrid && c >= 6){ ctx.strokeStyle = gridStroke(mode==='symbol' ? '#fbf7f0' : hex); ctx.lineWidth = 1; ctx.strokeRect(px+0.5, py+0.5, c-1, c-1); }
+          if (mode!=='color' && c >= 12){ var it=info(hex); if (it.symbol){ ctx.fillStyle = (mode==='symbol') ? '#1a1a1a' : ink(hex); ctx.fillText(it.symbol, px + c/2, py + c/2 + 1); } }
+        }
+      }
+      // Active-row highlight ring
+      ctx.globalAlpha = 1;
+      var ay = gridIndex(current) * c;
+      ctx.strokeStyle = 'var(--ls-ring)'; ctx.strokeStyle = '#ffd36b';
+      ctx.lineWidth = Math.max(2, Math.round(c*0.14));
+      ctx.strokeRect(0 + ctx.lineWidth/2, ay + ctx.lineWidth/2, nCols*c - ctx.lineWidth, c - ctx.lineWidth);
+    }
+
+    function scrollToActive(){
+      var wrap=$('lsGridWrap'); var c=effectiveCell();
+      var target = gridIndex(current)*c + c/2 - wrap.clientHeight/2;
+      wrap.scrollTop = Math.max(0, target);
+    }
+
+    function renderCounts(){
+      var runs = rowRuns(current);
+      var rtl = rowIsRTL(current);
+      var html = '<h2>Row ' + current + '</h2>' +
+        '<div class="ls-rowmeta">' + (rtl ? 'Worked right → left' : 'Worked left → right') + ' · ' + runs.length + ' color change' + (runs.length===1?'':'s') + '</div>';
+      runs.forEach(function(r){
+        var sym = (mode!=='color' && r.symbol) ? r.symbol : '';
+        html += '<div class="ls-run">' +
+          '<span class="sw" style="background:' + r.hex + ';color:' + ink(r.hex) + '">' + (sym||'') + '</span>' +
+          '<span class="cnt">' + r.count + '</span>' +
+          '<span class="nm">' + (r.name || r.hex) + '</span>' +
+        '</div>';
+      });
+      $('lsCounts').innerHTML = html;
+    }
+
+    function updateNav(){
+      $('lsRowNum').textContent = 'Row ' + current + ' of ' + nRows;
+      $('lsDir').textContent = rowIsRTL(current) ? '←' : '→';
+      $('lsBar').style.width = (100 * current / nRows) + '%';
+      $('lsPrev').disabled = current <= 1;
+      $('lsNext').disabled = current >= nRows;
+    }
+
+    function refresh(reScroll){ draw(); renderCounts(); updateNav(); if (reScroll) scrollToActive(); }
+    function goto(n){ var t = clampRow(n); if (t===current){ return; } current = t; saveProgress(); refresh(true); }
+
+    // ---- Controls ----
+    $('lsNext').onclick = function(){ goto(current+1); };
+    $('lsPrev').onclick = function(){ goto(current-1); };
+    document.addEventListener('keydown', function(e){
+      if (e.key==='ArrowUp'){ e.preventDefault(); goto(current+1); }
+      else if (e.key==='ArrowDown'){ e.preventDefault(); goto(current-1); }
+    });
+    // Tap a row to jump there
+    canvas.addEventListener('click', function(e){
+      var rect = canvas.getBoundingClientRect();
+      var c = effectiveCell();
+      var gi = Math.floor((e.clientY - rect.top) * (canvas.height/rect.height) / c);
+      var rowNum = nRows - gi;
+      goto(rowNum);
+    });
+    // Display mode
+    $('lsDisplay').querySelectorAll('button').forEach(function(b){
+      b.onclick = function(){ mode = b.dataset.mode; $('lsDisplay').querySelectorAll('button').forEach(function(x){ x.classList.toggle('on', x===b); }); draw(); renderCounts(); };
+    });
+    $('lsGridToggle').onchange = function(){ showGrid = this.checked; draw(); };
+    $('lsGridColor').onchange = function(){ gridColorMode = this.value; draw(); };
+    $('lsZoomIn').onclick = function(){ cell = Math.min(64, effectiveCell()+4); refresh(true); };
+    $('lsZoomOut').onclick = function(){ cell = Math.max(6, effectiveCell()-4); refresh(true); };
+    $('lsFit').onclick = function(){ cell = 0; refresh(true); };
+    window.addEventListener('resize', function(){ if (cell===0) refresh(true); });
+
+    // ---- Screen wake lock (prevent sleep while working). Safe: only affects sleep,
+    // silently no-ops if unsupported or blocked. ----
+    var wakeLock = null;
+    function requestWake(){ try { if ('wakeLock' in navigator){ navigator.wakeLock.request('screen').then(function(w){ wakeLock=w; }).catch(function(){ wakeLock=null; }); } } catch(e){ wakeLock=null; } }
+    function releaseWake(){ try { if (wakeLock) wakeLock.release(); } catch(e){} wakeLock=null; }
+    document.addEventListener('visibilitychange', function(){ if (document.visibilityState==='visible') requestWake(); });
+    window.addEventListener('pagehide', releaseWake);
+    requestWake();
+
+    // Go
+    refresh(true);
+  })();
+  </script>
+</body>
+</html>

@@ -811,6 +811,7 @@
               </div>
               <div class="group">
                 <button class="btn tertiary small js-help" id="guideLinkEditor">Help</button>
+                <button class="btn secondary" id="toLiveBtn">▶ Work on this</button>
                 <button class="btn" id="toPacketBtn">Customize Pattern Packet →</button>
               </div>
             </div>
@@ -3172,6 +3173,9 @@
   }
 
   document.getElementById('toPacketBtn')?.addEventListener('click', openPacketBuilder);
+  document.getElementById('toLiveBtn')?.addEventListener('click', () => {
+    if(saveActiveProjectForPacket()){ try{ sessionStorage.setItem('fiberos_live_from','editor'); }catch(e){} location.href='live-studio.html'; }
+  });
 
   document.querySelectorAll('#toolButtonsWrap [data-tool]').forEach(btn => btn.addEventListener('click', () => {
     state.selectedTool = btn.dataset.tool; state.eyedropMode = false;
