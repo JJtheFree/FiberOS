@@ -577,6 +577,7 @@
     // Save the current palette: exact yarns + the rules that were active when made.
     $('savePaletteBtn').onclick = function(){
       if(!state.slots.length) return;
+      if(window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save your palette.')) return;
       var name = prompt('Name this palette:', suggestPaletteName());
       if(name === null) return; // cancelled
       var colors = state.slots.map(function(s){

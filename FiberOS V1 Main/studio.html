@@ -493,7 +493,7 @@
         <a class="brand-chip" id="brandFilterChip" href="palette-studio.html" title="Yarn brands used for matching. Change in Palette Studio.">Brands: All</a>
         <button class="ghost small" id="projectsBtn">Projects</button>
         <button class="ghost small js-help" id="guideBtnTop">Help</button>
-        <button class="primary" id="saveHeaderBtn">Sign In to Save</button>
+        <button class="primary" id="saveHeaderBtn">Save</button>
       </div>
     </div>
     <div class="progress" id="progressBar">
@@ -997,15 +997,15 @@
   <div class="modal">
     <div class="head">
       <div>
-        <h3 style="margin:0 0 6px">Sign in to save your project</h3>
-        <div class="sub">This prototype simulates sign-in and saves to your browser with localStorage.</div>
+        <h3 style="margin:0 0 6px">Save your design</h3>
+        <div class="sub">Saved to your account and synced across your devices.</div>
       </div>
       <button class="close" data-close="saveModalWrap">Close</button>
     </div>
     <div class="body stack">
       <div class="save-grid">
-        <div class="field"><label for="saveName">Project name</label><input id="saveName" placeholder="My tapestry chart"></div>
-        <div class="field"><label for="saveEmail">Email</label><input id="saveEmail" type="email" placeholder="you@example.com"></div>
+        <div class="field"><label for="saveName">Design name</label><input id="saveName" placeholder="My tapestry chart"></div>
+        <div class="field hidden"><label for="saveEmail">Email</label><input id="saveEmail" type="email" placeholder="you@example.com"></div>
       </div>
       <div class="save-grid">
         <div class="field"><label for="visibilitySelect">Visibility</label>
@@ -3334,7 +3334,7 @@
   });
 
   // Save modal
-  ['saveHeaderBtn','saveProjectBtn'].forEach(id => document.getElementById(id).addEventListener('click', () => openModal('saveModalWrap')));
+  ['saveHeaderBtn','saveProjectBtn'].forEach(id => { var b = document.getElementById(id); if(b) b.addEventListener('click', () => { if (window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save your design.')) return; openModal('saveModalWrap'); }); });
   document.getElementById('confirmSaveBtn').addEventListener('click', saveProject);
   document.getElementById('viewSavedProjects').addEventListener('click', renderSavedProjects);
   document.getElementById('projectsBtn').addEventListener('click', () => { location.href = 'my-studio.html'; });

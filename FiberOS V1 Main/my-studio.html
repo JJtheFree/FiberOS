@@ -510,7 +510,7 @@
           Repo.rename(p.id, n); render();
         };
         card.querySelector('.download').onclick = function () { openDesignDownload(p); };
-        card.querySelector('.duplicate').onclick = function () { Repo.duplicate(p.id); render(); };
+        card.querySelector('.duplicate').onclick = function () { if (window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save the copy.')) return; Repo.duplicate(p.id); render(); };
         card.querySelector('.topalette').onclick = function () { createPaletteFromDesign(p); };
         card.querySelector('.archive').onclick = function () { Repo.toggleArchive(p.id); render(); };
         card.querySelector('.delete').onclick = function () {
@@ -705,6 +705,7 @@
     function createPaletteFromDesign(proj){
       var Pal = window.FiberOSPalettes;
       if(!Pal){ alert('Palettes are unavailable right now.'); return; }
+      if(window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save this palette.')) return;
       var grid = Repo.view.grid(proj);
       var distinct = distinctColors(grid);
       if(!distinct.length){ alert('This design has no colors to save yet.'); return; }
@@ -827,7 +828,7 @@
           el.innerHTML = '<span class="sw" style="background:' + y.hex + '"></span>' +
             '<div class="info"><strong>' + esc(y.name) + '</strong><small>' + esc(y.brandName) + (y.yarnName ? ' · ' + esc(y.yarnName) : '') + '</small></div>' +
             '<button class="btn small' + (owned ? ' secondary' : '') + '"' + (owned ? ' disabled' : '') + '>' + (owned ? 'Added' : 'Add') + '</button>';
-          el.querySelector('button').onclick = function () { My.add({ name: y.name, brandName: y.brandName, yarnName: y.yarnName, hex: y.hex, weightId: y.yarnWeightId, source: 'db' }); runLibSearch(); renderStash(); };
+          el.querySelector('button').onclick = function () { if (window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save yarn to your library.')) return; My.add({ name: y.name, brandName: y.brandName, yarnName: y.yarnName, hex: y.hex, weightId: y.yarnWeightId, source: 'db' }); runLibSearch(); renderStash(); };
           box.appendChild(el);
         });
       }
@@ -840,6 +841,7 @@
       $('ownAdd').onclick = function () {
         var name = $('ownName').value.trim();
         if (!name) { $('ownMsg').textContent = 'Please give it a name.'; return; }
+        if (window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save yarn to your library.')) return;
         var entry = My.add({ name: name, hex: $('ownColor').value, brandName: $('ownBrand').value.trim() || 'My yarn', yarnName: $('ownLine').value.trim(), weightId: $('ownWeight').value, source: 'manual' });
         if (!entry) { $('ownMsg').textContent = 'You already have that one.'; return; }
         $('ownMsg').textContent = 'Added “' + name + '”.';
