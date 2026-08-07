@@ -64,6 +64,8 @@
 
   // ---- sync ----
   function pullMergeAndReload() {
+    var guardKey = 'fos_synced_' + user.id;
+    try { if (sessionStorage.getItem(guardKey) === '1') return; } catch (e) {} // already synced this session
     status('Syncing your library…');
     sb.from('user_data').select('designs,palettes,yarns,live').eq('user_id', user.id).maybeSingle()
       .then(function (res) {
@@ -79,7 +81,17 @@
         lastHash = libHash(merged);
         return sb.from('user_data').upsert({ user_id: user.id, designs: merged.designs, palettes: merged.palettes, yarns: merged.yarns, live: merged.live, updated_at: new Date().toISOString() });
       })
-      .then(function () { status(''); location.reload(); })
+      .then(function () {
+        try { sessionStorage.setItem(guardKey, '1'); } catch (e) {}
+        // Strip the sign-in token from the URL so nothing can re-trigger sign-in.
+        try { if (location.hash) history.replaceState(null, '', location.pathname + location.search); } catch (e) {}
+        status('');
+        renderUI();
+        closeModal();
+        // Only the library page needs a refresh to show merged data; never reload the editor
+        // (that would discard in-progress work). Other pages read the merged data on next visit.
+        if (/my-studio\.html$/.test(location.pathname)) location.reload();
+      })
       .catch(function () { status('Could not sync right now. Your work is safe on this device.'); });
   }
   function maybePush(force) {
