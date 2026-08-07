@@ -78,7 +78,11 @@
           <div id="tabLib">
             <div class="sub" style="margin-bottom:8px">Search the full yarn database and add what you own.</div>
             <input id="libSearch" type="text" placeholder="Search by color, brand, or line…" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)">
-            <div class="my-results" id="libResults"><div class="sub">Type to search 14,000+ colorways.</div></div>
+            <div class="my-toolbar" style="margin-top:8px">
+              <select id="libBrand" class="grow" style="padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)"><option value="">All brands</option></select>
+              <select id="libWeight" class="grow" style="padding:9px 10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)"><option value="">All weights</option></select>
+            </div>
+            <div class="my-results" id="libResults"><div class="sub">Type to search, or pick a brand or weight to browse.</div></div>
           </div>
           <div id="tabOwn" class="hidden">
             <div class="sub" style="margin-bottom:8px">Not in the database? Add it by hand. Only a name and color are required.</div>
@@ -782,8 +786,13 @@
       var yarns = [], yarnsReady = false;
       if (window.FiberOSYarnAPI) {
         window.FiberOSYarnAPI.load()
-          .then(function (d) { yarns = d.colorways.filter(function (y) { return y.hex && !y.unavailable; }); yarnsReady = true; })
+          .then(function (d) { yarns = d.colorways.filter(function (y) { return y.hex && !y.unavailable; }); yarnsReady = true; populateLibFilters(); })
           .catch(function () { var lr = $('libResults'); if (lr) lr.innerHTML = '<div class="sub">Yarn database could not be loaded.</div>'; });
+      }
+      function populateLibFilters() {
+        var bsel = $('libBrand'); if (!bsel) return;
+        var brands = {}; yarns.forEach(function (y) { if (y.brandName) brands[y.brandName] = 1; });
+        Object.keys(brands).sort(function (a, b) { return a.localeCompare(b); }).forEach(function (b) { var o = document.createElement('option'); o.value = b; o.textContent = b; bsel.appendChild(o); });
       }
       document.querySelectorAll('#paneYarns .my-tab').forEach(function (b) {
         b.onclick = function () {
@@ -794,13 +803,23 @@
       });
       var libTimer;
       $('libSearch').oninput = function () { clearTimeout(libTimer); libTimer = setTimeout(runLibSearch, 90); };
+      if ($('libBrand')) $('libBrand').onchange = runLibSearch;
+      if ($('libWeight')) $('libWeight').onchange = runLibSearch;
       function runLibSearch() {
         var box = $('libResults');
         if (!yarnsReady) { box.innerHTML = '<div class="sub">Loading yarn database…</div>'; setTimeout(runLibSearch, 200); return; }
         var q = $('libSearch').value.trim().toLowerCase();
-        if (!q) { box.innerHTML = '<div class="sub">Type to search 14,000+ colorways.</div>'; return; }
-        var rows = yarns.filter(function (y) { return (y.name + ' ' + y.brandName + ' ' + (y.yarnName || '')).toLowerCase().indexOf(q) >= 0; }).slice(0, 40);
-        if (!rows.length) { box.innerHTML = '<div class="sub">No colorways match that search.</div>'; return; }
+        var brand = $('libBrand') ? $('libBrand').value : '';
+        var weight = $('libWeight') ? $('libWeight').value : '';
+        if (!q && !brand && !weight) { box.innerHTML = '<div class="sub">Type to search, or pick a brand or weight to browse.</div>'; return; }
+        var W = window.FiberOSWeights;
+        var rows = yarns.filter(function (y) {
+          if (brand && y.brandName !== brand) return false;
+          if (weight && (W ? W.name(y.yarnWeightId) : '') !== weight) return false;
+          if (q && (y.name + ' ' + y.brandName + ' ' + (y.yarnName || '')).toLowerCase().indexOf(q) < 0) return false;
+          return true;
+        }).slice(0, 60);
+        if (!rows.length) { box.innerHTML = '<div class="sub">No colorways match those filters.</div>'; return; }
         box.innerHTML = '';
         rows.forEach(function (y) {
           var owned = My.has(y);
@@ -812,7 +831,10 @@
           box.appendChild(el);
         });
       }
-      if (window.FiberOSWeights) window.FiberOSWeights.names().forEach(function (n) { var o = document.createElement('option'); o.textContent = n; $('ownWeight').appendChild(o); });
+      if (window.FiberOSWeights) window.FiberOSWeights.names().forEach(function (n) {
+        var o = document.createElement('option'); o.textContent = n; $('ownWeight').appendChild(o);
+        if ($('libWeight')) { var o2 = document.createElement('option'); o2.value = n; o2.textContent = n; $('libWeight').appendChild(o2); }
+      });
       $('ownColor').oninput = function () { $('ownPreview').style.background = this.value; };
       $('ownPreview').style.background = $('ownColor').value;
       $('ownAdd').onclick = function () {
