@@ -35,6 +35,9 @@
           <option value="name">Name</option>
           <option value="size">Largest chart</option>
         </select>
+        <button class="btn secondary" id="backupBtn" title="Download one file with all your designs, palettes, and yarn — your safety net against losing work">Back up all</button>
+        <button class="btn ghost" id="restoreBtn" title="Restore everything from a backup file">Restore</button>
+        <input id="restoreInput" type="file" accept="application/json,.json" style="display:none">
       </div>
     </section>
 
@@ -126,6 +129,104 @@
 
     function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
 
+    // ---- Download / backup helpers (protect work as real files) ----
+    function safeName(n) { return (String(n || 'file').replace(/[^\w\- ]+/g, '').trim().replace(/\s+/g, '-') || 'file'); }
+    function downloadCanvas(cv, filename) {
+      cv.toBlob(function (blob) {
+        if (!blob) { alert('Sorry, could not build the image.'); return; }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement('a'); a.href = url; a.download = filename;
+        document.body.appendChild(a); a.click();
+        setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 200);
+      });
+    }
+    function downloadText(text, filename, type) {
+      var blob = new Blob([text], { type: type || 'application/json' });
+      var url = URL.createObjectURL(blob);
+      var a = document.createElement('a'); a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click();
+      setTimeout(function () { URL.revokeObjectURL(url); a.remove(); }, 200);
+    }
+    function roundRect(ctx, x, y, w, h, r) { ctx.beginPath(); ctx.moveTo(x + r, y); ctx.arcTo(x + w, y, x + w, y + h, r); ctx.arcTo(x + w, y + h, x, y + h, r); ctx.arcTo(x, y + h, x, y, r); ctx.arcTo(x, y, x + w, y, r); ctx.closePath(); }
+
+    // Save a design's chart as a PNG image.
+    function downloadDesignPNG(p) {
+      var grid = Repo.view.grid(p);
+      if (!grid || !grid.length) { alert('This design has no chart to download yet.'); return; }
+      var rows = grid.length, cols = grid[0].length;
+      var s = Math.max(8, Math.min(40, Math.floor(1400 / Math.max(rows, cols))));
+      var cv = document.createElement('canvas'); cv.width = cols * s; cv.height = rows * s;
+      var ctx = cv.getContext('2d');
+      for (var y = 0; y < rows; y++) for (var x = 0; x < cols; x++) { ctx.fillStyle = grid[y][x] || '#ffffff'; ctx.fillRect(x * s, y * s, s, s); }
+      downloadCanvas(cv, safeName(p.name || 'design') + '.png');
+    }
+
+    // Save a palette as a PNG (swatches + names + yarn + hex).
+    function downloadPalettePNG(p) {
+      var W = window.FiberOSWeights;
+      var scale = 2, width = 720, top = 92, rowH = 84;
+      var height = top + p.colors.length * rowH + 40;
+      var cv = document.createElement('canvas'); cv.width = width * scale; cv.height = height * scale;
+      var ctx = cv.getContext('2d'); ctx.scale(scale, scale);
+      var FONT = "-apple-system,Segoe UI,Roboto,Helvetica,Arial,sans-serif";
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0, 0, width, height);
+      ctx.fillStyle = '#1a1a1a'; ctx.font = '700 26px ' + FONT; ctx.fillText(String(p.name || 'Palette'), 32, 46);
+      ctx.fillStyle = '#666'; ctx.font = '400 14px ' + FONT;
+      ctx.fillText(p.colors.length + ' colors  ·  FiberOS palette', 32, 70);
+      p.colors.forEach(function (c, i) {
+        var y = top + i * rowH;
+        ctx.fillStyle = c.hex || '#000000'; roundRect(ctx, 32, y, 60, 60, 12); ctx.fill();
+        ctx.strokeStyle = 'rgba(0,0,0,.15)'; ctx.lineWidth = 1; ctx.stroke();
+        var wl = W ? W.name(c.weightId) : ''; var weight = (wl && wl !== 'Unspecified') ? wl : '';
+        var meta = [c.brandName, c.yarnName].filter(Boolean).join('  ·  ');
+        ctx.fillStyle = '#1a1a1a'; ctx.font = '700 16px ' + FONT;
+        ctx.fillText((i + 1) + '. ' + (c.name || '(unnamed)') + (c.isBg ? '   (Background)' : ''), 112, y + 22);
+        ctx.fillStyle = '#555'; ctx.font = '400 13px ' + FONT;
+        if (meta) ctx.fillText(meta, 112, y + 42);
+        ctx.fillStyle = '#777';
+        ctx.fillText((weight ? weight + '  ·  ' : '') + String(c.hex).toUpperCase(), 112, meta ? y + 62 : y + 44);
+      });
+      downloadCanvas(cv, safeName(p.name || 'palette') + '.png');
+    }
+
+    // ---- Full backup / restore (all designs, palettes, and yarn) ----
+    function backupAll() {
+      var data = {
+        app: 'FiberOS', kind: 'backup', version: 1, exportedAt: new Date().toISOString(),
+        projects: Repo.getProjects().filter(function (p) { return !p.isDemo; }),
+        palettes: (window.FiberOSPalettes ? window.FiberOSPalettes.list() : []),
+        myYarns: (window.FiberOSMyYarns ? window.FiberOSMyYarns.list() : [])
+      };
+      downloadText(JSON.stringify(data, null, 2), 'fiberos-backup-' + new Date().toISOString().slice(0, 10) + '.json');
+    }
+    function restoreAll(file) {
+      if (!file) return;
+      var r = new FileReader();
+      r.onload = function () {
+        var data;
+        try { data = JSON.parse(r.result); } catch (e) { alert('That file is not a valid FiberOS backup.'); return; }
+        if (!data || typeof data !== 'object') { alert('That file is not a valid FiberOS backup.'); return; }
+        if (data.kind && data.kind !== 'backup') { if (!confirm('This does not look like a FiberOS backup. Import anyway?')) return; }
+        var merge = confirm('OK = MERGE this backup with what you already have.\nCancel = REPLACE everything with the backup.');
+        if (Array.isArray(data.projects)) {
+          var cur = merge ? Repo.getProjects().filter(function (p) { return !p.isDemo; }) : [];
+          var seen = {}; cur.forEach(function (p) { seen[String(p.id)] = 1; });
+          data.projects.forEach(function (p) { if (!p) return; var id = String(p.id || ''); if (id && seen[id]) return; cur.unshift(p); if (id) seen[id] = 1; });
+          Repo.saveProjects(cur);
+          if (!merge) Repo.dismissDemo();
+        }
+        if (Array.isArray(data.palettes) && window.FiberOSPalettes && window.FiberOSPalettes.importList) {
+          window.FiberOSPalettes.importList(data.palettes, { merge: merge });
+        }
+        if (Array.isArray(data.myYarns) && window.FiberOSMyYarns) {
+          try { window.FiberOSMyYarns.importJSON(JSON.stringify({ yarns: data.myYarns }), { merge: merge }); } catch (e) {}
+        }
+        render(); renderPalettes();
+        alert('Restore complete.');
+      };
+      r.readAsText(file);
+    }
+
     function render() {
       var list = Repo.getProjects();
       var q = document.getElementById('search').value.toLowerCase();
@@ -157,6 +258,8 @@
           '<div class="row">' +
             '<button class="btn small open">Open in Studio</button>' +
             '<button class="btn secondary small packet">Pattern packet</button>' +
+            '<button class="btn ghost small rename">Rename</button>' +
+            '<button class="btn ghost small download">Download</button>' +
             '<button class="btn ghost small duplicate">Duplicate</button>' +
             '<button class="btn secondary small topalette">Save as palette</button>' +
             '<button class="btn ghost small archive">Archive</button>' +
@@ -166,12 +269,18 @@
 
         card.querySelector('.open').onclick = function () { Repo.requestOpen(p); location.href = 'studio.html'; };
         card.querySelector('.packet').onclick = function () { Repo.makeActive(p); location.href = 'pattern-packet.html'; };
+        card.querySelector('.rename').onclick = function () {
+          var n = prompt('Rename design:', p.name || 'Untitled'); if (n === null) return;
+          Repo.rename(p.id, n); render();
+        };
+        card.querySelector('.download').onclick = function () { downloadDesignPNG(p); };
         card.querySelector('.duplicate').onclick = function () { Repo.duplicate(p.id); render(); };
         card.querySelector('.topalette').onclick = function () { createPaletteFromDesign(p); };
         card.querySelector('.archive').onclick = function () { Repo.toggleArchive(p.id); render(); };
         card.querySelector('.delete').onclick = function () {
-          if (!confirm('Delete this project? This cannot be undone.')) return;
-          Repo.remove(p.id); render();
+          if (!confirm('Delete this design? This cannot be undone.')) return;
+          if (p.isDemo) Repo.dismissDemo(); else Repo.remove(p.id);
+          render();
         };
         card.querySelector('.fav').onclick = function () { Repo.toggleFavorite(p.id); render(); };
         root.appendChild(card);
@@ -180,6 +289,16 @@
 
     document.getElementById('search').oninput = render;
     document.getElementById('sort').onchange = render;
+    (function () {
+      var backupBtn = document.getElementById('backupBtn');
+      if (backupBtn) backupBtn.onclick = backupAll;
+      var restoreBtn = document.getElementById('restoreBtn');
+      var restoreInput = document.getElementById('restoreInput');
+      if (restoreBtn && restoreInput) {
+        restoreBtn.onclick = function () { restoreInput.click(); };
+        restoreInput.onchange = function (e) { var f = e.target.files[0]; restoreAll(f); e.target.value = ''; };
+      }
+    })();
     document.querySelectorAll('.tab').forEach(function (b) {
       b.onclick = function () {
         document.querySelectorAll('.tab').forEach(function (x) { x.classList.remove('active'); });
@@ -216,6 +335,7 @@
           '<p class="muted">' + p.colors.length + ' colors · saved ' + timeAgo(p.createdAt) + '</p>' +
           '<div class="row">' +
             '<button class="btn small apply">Apply to a design</button>' +
+            '<button class="btn ghost small download">Download</button>' +
             '<button class="btn secondary small export">Export sheet</button>' +
             '<button class="btn ghost small rename">Rename</button>' +
             '<button class="btn ghost small del">Delete</button>' +
@@ -229,6 +349,7 @@
           Pal.remove(p.id); renderPalettes();
         };
         card.querySelector('.export').onclick = function () { exportPaletteSheet(p); };
+        card.querySelector('.download').onclick = function () { downloadPalettePNG(p); };
         card.querySelector('.apply').onclick = function () { openApply(p); };
         palRoot.appendChild(card);
       });
