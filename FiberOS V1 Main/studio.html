@@ -457,13 +457,6 @@
   #screen-editor .editor-layout.topbar .editor-source-card canvas{max-width:100%;height:auto}
   #screen-editor .editor-layout.topbar .editor-compare.no-source .editor-source-card{display:none}
   #screen-editor .editor-layout.topbar .editor-canvas-wrap{width:100%!important;min-height:0;overflow:auto;display:block}
-  /* At ordinary browser zoom (~100%), this width band hides the reference card to save
-     space. Without this, the chart's 2-column grid still reserves the wide column for the
-     hidden card and the canvas collapses into the narrow 150px column. Drop to a single
-     full-width column here so the chart fills the space (it re-fits on resize). */
-  @media (min-width:1001px) and (max-width:1300px){
-    #screen-editor .editor-layout.topbar .editor-compare{grid-template-columns:minmax(0,1fr)!important}
-  }
 
   @media(min-width:1001px){
     #screen-editor.active{height:calc(100vh - 116px);overflow:hidden}

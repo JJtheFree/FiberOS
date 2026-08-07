@@ -296,12 +296,9 @@ html[data-theme="dark"] .availability-badge {
 #screen-editor .editor-compare { flex: 1; min-height: 0; grid-template-columns: 150px minmax(0, 1fr) !important; align-items: start; }
 #screen-editor .editor-source-card { align-self: start; position: static; }
 #screen-editor .editor-canvas-wrap { min-height: 0 !important; overflow: auto; display: flex; align-items: flex-start; justify-content: center; }
-/* Below ~1300px the chart column is tight, so drop the reference thumbnail and give the
-   whole column to the chart (the chart is the priority; the reference is a nicety). */
-@media (min-width: 1001px) and (max-width: 1300px) {
-  #screen-editor .editor-compare { grid-template-columns: minmax(0, 1fr) !important; }
-  #screen-editor .editor-source-card { display: none !important; }
-}
+/* Keep the reference thumbnail visible at every desktop width — users want to see it while
+   they work. The chart still fills its (wide) column beside it. Only genuinely source-less
+   designs (blank grids) drop the reference, via the .no-source rule. */
 /* Narrow screens: stack and let the page scroll (JS uses the mobile path). */
 @media (max-width: 1000px) {
   #screen-editor.active { height: auto !important; overflow: visible !important; }
