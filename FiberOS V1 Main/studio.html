@@ -67,7 +67,10 @@
   .top-actions .primary{background:linear-gradient(135deg,#cf5b97,#b53c86);font-weight:700}
   .top-actions .ghost{background:rgba(255,255,255,.06)}
   .top-actions .small{padding:11px 16px}
-  .brand-chip:hover{background:rgba(255,255,255,.22);color:#fff}
+  /* Header-scoped Brands chip: override the light shared .brand-chip so it matches the dark bar and stays legible. */
+  .top-actions .brand-chip{padding:12px 18px;background:rgba(255,255,255,.12);color:#fff;font-size:1.05rem;font-weight:600;border:none;border-radius:14px}
+  .top-actions .brand-chip::before{background:rgba(255,255,255,.75)}
+  .top-actions .brand-chip:hover{background:rgba(255,255,255,.22);color:#fff;border:none}
 
   .progress{
     margin-top:14px;display:flex;gap:10px;align-items:center;overflow:auto;padding-bottom:4px
@@ -131,7 +134,7 @@
   .brand-badge .ui-icon{width:23px;height:23px;stroke:#fff}
   .tool-button{display:flex;align-items:center;justify-content:center;gap:8px}
   .sample-preview img{width:100%;height:100%;object-fit:contain}
-  .sample-badge{position:absolute;right:8px;bottom:8px;margin:0!important;padding:6px 9px;border-radius:999px;background:var(--success);color:#fff;font-size:.75rem;font-weight:800}
+  .sample-badge{position:absolute;right:8px;bottom:8px;margin:0!important;padding:6px 10px;border-radius:999px;background:var(--success);color:#fff;font-size:.82rem;font-weight:800}
   .muted{color:var(--muted)}
   .proto-banner{margin-top:16px;background:#fff3db;border:1px solid #eddab0;color:#70481f;padding:12px 14px;border-radius:14px}
 
@@ -441,7 +444,7 @@
   #screen-editor .editor-layout.topbar .palette-item strong{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block;font-size:.85rem}
   #screen-editor .editor-layout.topbar .palette-item .legend{display:none!important}
   #screen-editor .editor-layout.topbar .palette-item .palette-quick-actions{display:flex!important;flex-direction:row!important;align-items:center!important;gap:6px;flex:0 0 auto}
-  #screen-editor .editor-layout.topbar .palette-item .palette-quick-actions button{padding:5px 10px;font-size:.8rem;white-space:nowrap}
+  #screen-editor .editor-layout.topbar .palette-item .palette-quick-actions button{padding:7px 12px;font-size:.92rem;white-space:nowrap}
   #screen-editor .editor-layout.topbar #addEditorColorBtn{width:170px!important;margin:0!important;flex:0 0 auto}
   #screen-editor .editor-layout.topbar > .panel.right .tip{display:none}
   /* Chart gets everything left over: a single full-width column, reference thumbnail on top. */
@@ -2493,12 +2496,10 @@
     const availW = Math.max(120, cw - pad - sideMargin * 2);
     const availH = Math.max(140, ch - pad - topMargin * 2);
     const cap = +els.zoomEditor.max || 60;
-    // If the whole grid fits with comfortably clickable cells (>=11px), show all of it.
-    // Otherwise the grid is too dense to fit nicely, so size cells to fill the pane WIDTH
-    // (big, clickable cells) and let the pane scroll vertically to reach lower rows — this
-    // uses the wide horizontal space instead of wasting it on a tiny centered grid.
-    const cellBoth = Math.min(availW / cols, availH / rows);
-    let cell = cellBoth >= 11 ? cellBoth : Math.max(cellBoth, availW / cols);
+    // Fill the available WIDTH so the grid is as large and usable as possible across the
+    // whole pane; the pane scrolls vertically to reach lower rows. This gives a full-width
+    // working view instead of a small centered grid with wasted space on the sides.
+    let cell = availW / cols;
     cell = clamp(Math.floor(cell), 3, cap);
     els.zoomEditor.value = cell;
     redrawGrid();
