@@ -1209,6 +1209,9 @@
     // Double rAF: let the editor pane become visible and get laid out (so it has a real
     // height) before we size the chart to fill it.
     if(name==='editor') requestAnimationFrame(() => requestAnimationFrame(() => { renderEditorSource(); fitEditorChart(); }));
+    // Same idea for Adjust: re-draw the image preview when returning to this step so the
+    // photo is always visible (e.g., coming back from Edit/Packet to change grid size).
+    if(name==='adjust') requestAnimationFrame(() => requestAnimationFrame(() => { renderAdjustPreview(); }));
   }
 
   function openModal(id){ document.getElementById(id).classList.add('show'); }
