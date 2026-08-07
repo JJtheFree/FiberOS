@@ -59,20 +59,22 @@
   .suite-links a{display:inline-flex;align-items:center;padding:10px 13px;border-radius:12px;text-decoration:none;color:#fff;font-weight:750;background:rgba(255,255,255,.10);border:1px solid rgba(255,255,255,.12)}
   .suite-links a:hover,.suite-links a:focus-visible{background:rgba(255,255,255,.20);color:#fff;outline:none}
   .top-actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-  .top-actions button,.pill-link{
-    border:none;border-radius:14px;padding:12px 16px;cursor:pointer;
-    background:rgba(255,255,255,.12);color:#fff
+  .top-actions button,.pill-link,.brand-chip{
+    border:none;border-radius:14px;padding:12px 18px;cursor:pointer;
+    background:rgba(255,255,255,.12);color:#fff;font-size:1.05rem;font-weight:600;
+    line-height:1.1;text-decoration:none;display:inline-flex;align-items:center;gap:8px
   }
   .top-actions .primary{background:linear-gradient(135deg,#cf5b97,#b53c86);font-weight:700}
   .top-actions .ghost{background:rgba(255,255,255,.06)}
-  .top-actions .small{padding:10px 12px}
+  .top-actions .small{padding:11px 16px}
+  .brand-chip:hover{background:rgba(255,255,255,.22);color:#fff}
 
   .progress{
     margin-top:14px;display:flex;gap:10px;align-items:center;overflow:auto;padding-bottom:4px
   }
   .step-chip{
-    white-space:nowrap;background:rgba(255,255,255,.12);padding:10px 14px;border-radius:999px;border:1px solid rgba(255,255,255,.08);color:#fff;cursor:pointer;
-    display:flex;align-items:center;gap:10px;font-weight:600
+    white-space:nowrap;background:rgba(255,255,255,.12);padding:12px 18px;border-radius:999px;border:1px solid rgba(255,255,255,.08);color:#fff;cursor:pointer;
+    display:flex;align-items:center;gap:10px;font-weight:600;font-size:1.05rem
   }
   .step-chip.active{background:var(--card);color:var(--aubergine)}
   .step-chip:disabled{opacity:.45;cursor:not-allowed}
@@ -3327,7 +3329,7 @@
   ['saveHeaderBtn','saveProjectBtn'].forEach(id => document.getElementById(id).addEventListener('click', () => openModal('saveModalWrap')));
   document.getElementById('confirmSaveBtn').addEventListener('click', saveProject);
   document.getElementById('viewSavedProjects').addEventListener('click', renderSavedProjects);
-  document.getElementById('projectsBtn').addEventListener('click', () => { openModal('saveModalWrap'); renderSavedProjects(); });
+  document.getElementById('projectsBtn').addEventListener('click', () => { location.href = 'my-studio.html'; });
 
   // Mobile nav
   els.mobileNav.querySelectorAll('button').forEach(btn => btn.addEventListener('click', () => {
