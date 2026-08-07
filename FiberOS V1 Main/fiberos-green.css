@@ -80,38 +80,40 @@ select:focus-visible, textarea:focus-visible, .kbd-focus:focus-visible {
 
 /* ---- DARK THEME ----------------------------------------------------------- */
 html[data-theme="dark"] {
+  /* Warm chocolate base. Green primary/header keep the brand; gold, coral and sage are
+     the accents. No purples or periwinkles anywhere. */
   /* shared.css names */
-  --bg: #131a13;
-  --surface: #1c241b;
-  --surface2: #243026;
-  --ink: #eef3ea;
-  --muted: #a7bbab;
-  --aub: #86b394;      /* soft sage-green for text/accents on dark (not mint) */
+  --bg: #181310;
+  --surface: #241d17;
+  --surface2: #31271d;
+  --ink: #f2ebe0;
+  --muted: #c8b7a3;
+  --aub: #8fb79c;      /* soft sage-green for text/accents on dark */
   --plum: #6f9a7d;
-  --pink: #9aa2e0;
+  --pink: #d0857e;     /* warm rose (was periwinkle) */
   --coral: #d1793a;
   --green: #4cad7a;
-  --line: #33422f;
-  --shadow: 0 12px 30px rgba(0, 0, 0, .40);
+  --line: #463729;
+  --shadow: 0 12px 30px rgba(0, 0, 0, .42);
 
   /* studio names */
-  --surface-2: #243026;
-  --aubergine: #86b394;
-  --magenta: #9aa2e0;
-  --lilac: #c3b0e8;
-  --gold: #c9a959;
+  --surface-2: #31271d;
+  --aubergine: #8fb79c;
+  --magenta: #2f8a5b;  /* green so button gradients stay on-brand (was periwinkle) */
+  --lilac: #b98a4a;    /* warm gold-brown (was lavender) */
+  --gold: #d8a24a;
   --success: #4cad7a;
   --warning: #d1793a;
 }
 
 html[data-theme="dark"] body {
   background:
-    radial-gradient(circle at 10% 0%, rgba(47, 111, 72, .30), transparent 22%),
+    radial-gradient(circle at 10% 0%, rgba(120, 80, 44, .22), transparent 24%),
     var(--bg) !important;
 }
 
 html[data-theme="dark"] .thumb {
-  background: linear-gradient(135deg, #2a3a2c, #2f2f42) !important;
+  background: linear-gradient(135deg, #2a221a, #3a2c1d) !important;
 }
 
 html[data-theme="dark"] .app header {

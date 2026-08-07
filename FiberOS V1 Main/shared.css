@@ -3,9 +3,9 @@
 
 /* Milestone 1 approved polish */
 .theme-toggle{margin-left:auto}.danger{background:#8b2e3d!important;color:#fff!important}.status-message{padding:10px 12px;border-radius:12px;background:#fff3dc;border:1px solid #efd4a5;margin:10px 0}.kbd-focus:focus-visible,button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:3px solid #c13f8a;outline-offset:2px}
-html[data-theme="dark"]{--bg:#171219;--surface:#241b25;--surface2:#322338;--ink:#f7edf5;--muted:#c9b5c7;--aub:#d69bd5;--plum:#c985bd;--line:#49384b;--shadow:0 12px 30px rgba(0,0,0,.35);color-scheme:dark}
-html[data-theme="dark"] body{background:radial-gradient(circle at 10% 0%,rgba(124,58,113,.28),transparent 22%),var(--bg)}
-html[data-theme="dark"] .top{background:rgba(36,27,37,.96)}html[data-theme="dark"] .card,html[data-theme="dark"] .field input,html[data-theme="dark"] .field select,html[data-theme="dark"] .field textarea,html[data-theme="dark"] .tab,html[data-theme="dark"] .btn.secondary,html[data-theme="dark"] .btn.ghost,html[data-theme="dark"] .empty,html[data-theme="dark"] .suggestions{background:#241b25;color:var(--ink)}
+html[data-theme="dark"]{--bg:#181310;--surface:#241d17;--surface2:#31271d;--ink:#f2ebe0;--muted:#c8b7a3;--aub:#8fb79c;--plum:#6f9a7d;--line:#463729;--shadow:0 12px 30px rgba(0,0,0,.42);color-scheme:dark}
+html[data-theme="dark"] body{background:radial-gradient(circle at 10% 0%,rgba(120,80,44,.22),transparent 24%),var(--bg)}
+html[data-theme="dark"] .top{background:rgba(36,29,23,.96)}html[data-theme="dark"] .card,html[data-theme="dark"] .field input,html[data-theme="dark"] .field select,html[data-theme="dark"] .field textarea,html[data-theme="dark"] .tab,html[data-theme="dark"] .btn.secondary,html[data-theme="dark"] .btn.ghost,html[data-theme="dark"] .empty,html[data-theme="dark"] .suggestions{background:#241d17;color:var(--ink)}
 html[data-theme="dark"] .paper{color:#222;background:white}
 
 /* Packet layout corrections */

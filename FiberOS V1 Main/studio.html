@@ -2595,7 +2595,7 @@
   function drawRowLabels(ctx, rows, cols, cell, sideMargin, topMargin){
     const settings=getRowLabelSettings();
     if(!settings.show) return;
-    ctx.fillStyle='#5f445f';
+    ctx.fillStyle = document.documentElement.getAttribute('data-theme')==='dark' ? '#cbb896' : '#5a4a3a';
     ctx.font=`700 ${Math.max(10,Math.min(14,cell*.9))}px sans-serif`;
     ctx.textBaseline='middle';
     for(let y=0;y<rows;y++){
