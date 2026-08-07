@@ -72,6 +72,43 @@
       <div class="ap-foot" id="apFoot"></div>
     </div>
   </div>
+
+  <div id="dlOverlay" class="ap-overlay">
+    <div class="ap-panel" style="max-width:460px">
+      <div class="ap-head"><h3 id="dlTitle">Download chart image</h3><button class="ap-close" id="dlClose" aria-label="Close">×</button></div>
+      <div class="ap-body">
+        <div class="dl-field">
+          <label for="dlMode">Show as</label>
+          <select id="dlMode" class="dl-input">
+            <option value="color">Color</option>
+            <option value="symbol">Symbols only</option>
+            <option value="both">Color + symbols</option>
+          </select>
+        </div>
+        <label class="dl-check"><input type="checkbox" id="dlGrid" checked> Grid lines <span class="dl-hint">(bold every 10)</span></label>
+        <label class="dl-check"><input type="checkbox" id="dlRows" checked> Row numbers with direction arrows</label>
+        <label class="dl-check"><input type="checkbox" id="dlCols"> Column numbers</label>
+        <div class="dl-field" style="margin-top:12px">
+          <label for="dlSize">Size</label>
+          <select id="dlSize" class="dl-input">
+            <option value="16">Small</option>
+            <option value="26" selected>Medium</option>
+            <option value="40">Large</option>
+          </select>
+        </div>
+        <div class="dl-hint" style="margin-top:10px">Just the graph, no full packet. Great as a quick, printable chart.</div>
+      </div>
+      <div class="ap-foot"><button class="btn secondary small" id="dlCancel">Cancel</button><button class="btn small" id="dlGo">Download PNG</button></div>
+    </div>
+  </div>
+  <style>
+    .dl-field{display:flex;flex-direction:column;gap:6px;margin-bottom:12px}
+    .dl-field label{font-weight:700}
+    .dl-input{padding:10px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink);font-weight:600}
+    .dl-check{display:flex;align-items:center;gap:10px;padding:8px 0;font-weight:600;cursor:pointer}
+    .dl-check input{width:18px;height:18px;accent-color:var(--aub)}
+    .dl-hint{color:var(--muted);font-size:.82rem;font-weight:500}
+  </style>
   <style>
     .ap-overlay{position:fixed;inset:0;background:rgba(20,12,22,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
     .ap-overlay.show{display:flex}
@@ -189,6 +226,92 @@
       downloadCanvas(cv, safeName(p.name || 'palette') + '.png');
     }
 
+    // ---- Download a design as a single chart image, with display options ----
+    function ink(hex){ var r = hexRgb(hex); var L = .299*r[0] + .587*r[1] + .114*r[2]; return L > 150 ? '#1a1a1a' : '#ffffff'; }
+    function chartColorMap(p){
+      var SYMS = (window.FiberOSSchema && FiberOSSchema.SYMBOLS) || ['●','▲','■','◆','✚','✦','○','△','□','◇','✕','✱','⬟','⬢','▰','▱'];
+      var map = {};
+      (p.palette || []).forEach(function(e){ var hex = String(e.chartHex || e.hex || '').toUpperCase(); if(hex && hex[0]==='#') map[hex] = { hex:hex, name:e.displayName||e.name||'', symbol:e.symbol||'' }; });
+      var grid = Repo.view.grid(p), counts = {};
+      grid.forEach(function(r){ r.forEach(function(c){ var k = String(c).toUpperCase(); counts[k] = (counts[k]||0)+1; }); });
+      var order = Object.keys(counts).sort(function(a,b){ return counts[b]-counts[a]; });
+      var si = 0;
+      order.forEach(function(hex){ if(!map[hex]) map[hex] = { hex:hex, name:'', symbol:'' }; if(!map[hex].symbol){ map[hex].symbol = SYMS[si % SYMS.length]; si++; } });
+      return map;
+    }
+    function renderChartPNG(p, opts){
+      var grid = Repo.view.grid(p);
+      if(!grid || !grid.length){ alert('This design has no chart to download yet.'); return; }
+      var rows = grid.length, cols = grid[0].length;
+      var cmap = chartColorMap(p);
+      var rowDir = (p.chart && p.chart.rowDirection) || 'odd-rtl';
+      var cell = opts.cell, mode = opts.mode, showGrid = opts.grid, showRows = opts.rows, showCols = opts.cols;
+      var lblFs = Math.max(10, Math.min(15, Math.floor(cell*0.66)));
+      var sideM = showRows ? Math.max(42, lblFs*3) : 10;
+      var topM = 30 + (showCols ? lblFs+8 : 6);
+      var botM = showCols ? lblFs+10 : 10;
+      var W = sideM*2 + cols*cell + 10;
+      var H = topM + rows*cell + botM;
+      var scale = 2;
+      var cv = document.createElement('canvas'); cv.width = W*scale; cv.height = H*scale;
+      var ctx = cv.getContext('2d'); ctx.scale(scale, scale);
+      ctx.fillStyle = '#ffffff'; ctx.fillRect(0,0,W,H);
+      ctx.fillStyle = '#1a1a1a'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+      ctx.font = '700 18px -apple-system,Segoe UI,Roboto,Arial,sans-serif';
+      ctx.fillText(String(p.name || 'FiberOS chart'), sideM, 22);
+      var ox = sideM, oy = topM;
+      ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.font = '700 ' + Math.max(8, Math.floor(cell*0.6)) + 'px -apple-system,Segoe UI,Roboto,Arial,sans-serif';
+      for(var gy=0; gy<rows; gy++){ var row = grid[gy]; for(var gx=0; gx<cols; gx++){
+        var hex = String(row[gx] != null ? row[gx] : '#FFFFFF').toUpperCase();
+        var x = ox + gx*cell, y = oy + gy*cell;
+        ctx.fillStyle = (mode==='symbol') ? '#ffffff' : hex; ctx.fillRect(x, y, cell, cell);
+        if(mode!=='color' && cell>=12){ var it = cmap[hex]; if(it && it.symbol){ ctx.fillStyle = (mode==='symbol') ? '#1a1a1a' : ink(hex); ctx.fillText(it.symbol, x+cell/2, y+cell/2+1); } }
+      }}
+      if(showGrid){
+        for(var vx=0; vx<=cols; vx++){ var maj = vx%10===0; ctx.strokeStyle = maj?'rgba(0,0,0,.55)':'rgba(0,0,0,.16)'; ctx.lineWidth = maj?1.4:1; ctx.beginPath(); ctx.moveTo(ox+vx*cell, oy); ctx.lineTo(ox+vx*cell, oy+rows*cell); ctx.stroke(); }
+        for(var hy=0; hy<=rows; hy++){ var majr = hy%10===0; ctx.strokeStyle = majr?'rgba(0,0,0,.55)':'rgba(0,0,0,.16)'; ctx.lineWidth = majr?1.4:1; ctx.beginPath(); ctx.moveTo(ox, oy+hy*cell); ctx.lineTo(ox+cols*cell, oy+hy*cell); ctx.stroke(); }
+      }
+      if(showRows){
+        ctx.fillStyle = '#3a2f2a'; ctx.font = '700 ' + lblFs + 'px -apple-system,Segoe UI,Roboto,Arial,sans-serif'; ctx.textBaseline = 'middle';
+        for(var ry=0; ry<rows; ry++){
+          var rowNum = rows - ry; var isRTL = (rowDir==='odd-rtl') ? (rowNum%2===1) : (rowNum%2===0);
+          var cy = oy + ry*cell + cell/2;
+          if(isRTL){ ctx.textAlign = 'left'; ctx.fillText(rowNum + '  ←', ox + cols*cell + 8, cy); }
+          else { ctx.textAlign = 'right'; ctx.fillText('→  ' + rowNum, ox - 8, cy); }
+        }
+      }
+      if(showCols){
+        ctx.fillStyle = '#3a2f2a'; ctx.font = '700 ' + Math.max(9, Math.min(13, Math.floor(cell*0.55))) + 'px sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'top';
+        for(var cx=0; cx<cols; cx++){ var colNum = cols - cx; ctx.fillText(String(colNum), ox + cx*cell + cell/2, oy + rows*cell + 5); }
+      }
+      cv.toBlob(function(blob){ if(!blob){ alert('Could not build the image.'); return; } var url = URL.createObjectURL(blob); var a = document.createElement('a'); a.href = url; a.download = safeName(p.name || 'chart') + '-chart.png'; document.body.appendChild(a); a.click(); setTimeout(function(){ URL.revokeObjectURL(url); a.remove(); }, 200); });
+    }
+    var dlProject = null, dlReady = false;
+    function openDesignDownload(p){
+      dlProject = p;
+      if(!dlReady){
+        document.getElementById('dlClose').onclick = closeDesignDownload;
+        document.getElementById('dlCancel').onclick = closeDesignDownload;
+        document.getElementById('dlOverlay').addEventListener('click', function(e){ if(e.target===this) closeDesignDownload(); });
+        document.getElementById('dlGo').onclick = function(){
+          if(!dlProject) return;
+          renderChartPNG(dlProject, {
+            mode: document.getElementById('dlMode').value,
+            grid: document.getElementById('dlGrid').checked,
+            rows: document.getElementById('dlRows').checked,
+            cols: document.getElementById('dlCols').checked,
+            cell: (+document.getElementById('dlSize').value) || 26
+          });
+          closeDesignDownload();
+        };
+        dlReady = true;
+      }
+      document.getElementById('dlTitle').textContent = 'Download “' + (p.name || 'design') + '”';
+      document.getElementById('dlOverlay').classList.add('show');
+    }
+    function closeDesignDownload(){ document.getElementById('dlOverlay').classList.remove('show'); }
+
     // ---- Full backup / restore (all designs, palettes, and yarn) ----
     function backupAll() {
       var data = {
@@ -275,7 +398,7 @@
           var n = prompt('Rename design:', p.name || 'Untitled'); if (n === null) return;
           Repo.rename(p.id, n); render();
         };
-        card.querySelector('.download').onclick = function () { downloadDesignPNG(p); };
+        card.querySelector('.download').onclick = function () { openDesignDownload(p); };
         card.querySelector('.duplicate').onclick = function () { Repo.duplicate(p.id); render(); };
         card.querySelector('.topalette').onclick = function () { createPaletteFromDesign(p); };
         card.querySelector('.archive').onclick = function () { Repo.toggleArchive(p.id); render(); };
