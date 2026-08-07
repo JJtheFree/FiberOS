@@ -86,17 +86,13 @@
           </select>
         </div>
         <label class="dl-check"><input type="checkbox" id="dlGrid" checked> Grid lines <span class="dl-hint">(bold every 10)</span></label>
+        <div class="dl-sub" id="dlGridOpts">
+          <div class="dl-field2"><label for="dlGridColor">Grid line color</label><input type="color" id="dlGridColor" value="#9a9a9a" class="dl-color"></div>
+          <div class="dl-field2"><label for="dlGridOpacity">Opacity <output id="dlGridOpacityVal">60%</output></label><input type="range" id="dlGridOpacity" min="10" max="100" value="60" class="dl-range"></div>
+        </div>
         <label class="dl-check"><input type="checkbox" id="dlRows" checked> Row numbers with direction arrows</label>
         <label class="dl-check"><input type="checkbox" id="dlCols"> Column numbers</label>
-        <div class="dl-field" style="margin-top:12px">
-          <label for="dlSize">Size</label>
-          <select id="dlSize" class="dl-input">
-            <option value="16">Small</option>
-            <option value="26" selected>Medium</option>
-            <option value="40">Large</option>
-          </select>
-        </div>
-        <div class="dl-hint" style="margin-top:10px">Just the graph, no full packet. Great as a quick, printable chart.</div>
+        <div class="dl-hint" style="margin-top:10px">Just the graph, no full packet. Exports at full size.</div>
       </div>
       <div class="ap-foot"><button class="btn secondary small" id="dlCancel">Cancel</button><button class="btn small" id="dlGo">Download PNG</button></div>
     </div>
@@ -108,6 +104,12 @@
     .dl-check{display:flex;align-items:center;gap:10px;padding:8px 0;font-weight:600;cursor:pointer}
     .dl-check input{width:18px;height:18px;accent-color:var(--aub)}
     .dl-hint{color:var(--muted);font-size:.82rem;font-weight:500}
+    .dl-sub{display:flex;flex-direction:column;gap:12px;padding:6px 0 8px 30px}
+    .dl-sub.dl-disabled{opacity:.4;pointer-events:none}
+    .dl-field2{display:flex;align-items:center;justify-content:space-between;gap:12px}
+    .dl-field2 label{font-weight:600}
+    .dl-color{width:54px;height:34px;border:1px solid var(--line);border-radius:8px;background:var(--surface);padding:2px;cursor:pointer}
+    .dl-range{width:190px;accent-color:var(--aub)}
   </style>
   <style>
     .ap-overlay{position:fixed;inset:0;background:rgba(20,12,22,.55);display:none;align-items:center;justify-content:center;z-index:9999;padding:20px}
@@ -228,6 +230,7 @@
 
     // ---- Download a design as a single chart image, with display options ----
     function ink(hex){ var r = hexRgb(hex); var L = .299*r[0] + .587*r[1] + .114*r[2]; return L > 150 ? '#1a1a1a' : '#ffffff'; }
+    function hexToRgba(hex, a){ var r = hexRgb(hex); return 'rgba(' + r[0] + ',' + r[1] + ',' + r[2] + ',' + a + ')'; }
     function chartColorMap(p){
       var SYMS = (window.FiberOSSchema && FiberOSSchema.SYMBOLS) || ['●','▲','■','◆','✚','✦','○','△','□','◇','✕','✱','⬟','⬢','▰','▱'];
       var map = {};
@@ -245,7 +248,8 @@
       var rows = grid.length, cols = grid[0].length;
       var cmap = chartColorMap(p);
       var rowDir = (p.chart && p.chart.rowDirection) || 'odd-rtl';
-      var cell = opts.cell, mode = opts.mode, showGrid = opts.grid, showRows = opts.rows, showCols = opts.cols;
+      var cell = 40, mode = opts.mode, showGrid = opts.grid, showRows = opts.rows, showCols = opts.cols;
+      var gridColor = opts.gridColor || '#9a9a9a', gridAlpha = (opts.gridOpacity != null ? opts.gridOpacity : 0.6);
       var lblFs = Math.max(10, Math.min(15, Math.floor(cell*0.66)));
       var sideM = showRows ? Math.max(42, lblFs*3) : 10;
       var topM = 30 + (showCols ? lblFs+8 : 6);
@@ -269,8 +273,9 @@
         if(mode!=='color' && cell>=12){ var it = cmap[hex]; if(it && it.symbol){ ctx.fillStyle = (mode==='symbol') ? '#1a1a1a' : ink(hex); ctx.fillText(it.symbol, x+cell/2, y+cell/2+1); } }
       }}
       if(showGrid){
-        for(var vx=0; vx<=cols; vx++){ var maj = vx%10===0; ctx.strokeStyle = maj?'rgba(0,0,0,.55)':'rgba(0,0,0,.16)'; ctx.lineWidth = maj?1.4:1; ctx.beginPath(); ctx.moveTo(ox+vx*cell, oy); ctx.lineTo(ox+vx*cell, oy+rows*cell); ctx.stroke(); }
-        for(var hy=0; hy<=rows; hy++){ var majr = hy%10===0; ctx.strokeStyle = majr?'rgba(0,0,0,.55)':'rgba(0,0,0,.16)'; ctx.lineWidth = majr?1.4:1; ctx.beginPath(); ctx.moveTo(ox, oy+hy*cell); ctx.lineTo(ox+cols*cell, oy+hy*cell); ctx.stroke(); }
+        var minorC = hexToRgba(gridColor, gridAlpha), majorC = hexToRgba(gridColor, Math.min(1, gridAlpha + 0.35));
+        for(var vx=0; vx<=cols; vx++){ var maj = vx%10===0; ctx.strokeStyle = maj?majorC:minorC; ctx.lineWidth = maj?1.6:1; ctx.beginPath(); ctx.moveTo(ox+vx*cell, oy); ctx.lineTo(ox+vx*cell, oy+rows*cell); ctx.stroke(); }
+        for(var hy=0; hy<=rows; hy++){ var majr = hy%10===0; ctx.strokeStyle = majr?majorC:minorC; ctx.lineWidth = majr?1.6:1; ctx.beginPath(); ctx.moveTo(ox, oy+hy*cell); ctx.lineTo(ox+cols*cell, oy+hy*cell); ctx.stroke(); }
       }
       if(showRows){
         ctx.fillStyle = '#3a2f2a'; ctx.font = '700 ' + lblFs + 'px -apple-system,Segoe UI,Roboto,Arial,sans-serif'; ctx.textBaseline = 'middle';
@@ -294,14 +299,21 @@
         document.getElementById('dlClose').onclick = closeDesignDownload;
         document.getElementById('dlCancel').onclick = closeDesignDownload;
         document.getElementById('dlOverlay').addEventListener('click', function(e){ if(e.target===this) closeDesignDownload(); });
+        var dlGridEl = document.getElementById('dlGrid');
+        var dlGridOptsEl = document.getElementById('dlGridOpts');
+        var dlOpacityEl = document.getElementById('dlGridOpacity');
+        function syncGridOpts(){ dlGridOptsEl.classList.toggle('dl-disabled', !dlGridEl.checked); }
+        dlGridEl.onchange = syncGridOpts; syncGridOpts();
+        dlOpacityEl.oninput = function(){ document.getElementById('dlGridOpacityVal').textContent = dlOpacityEl.value + '%'; };
         document.getElementById('dlGo').onclick = function(){
           if(!dlProject) return;
           renderChartPNG(dlProject, {
             mode: document.getElementById('dlMode').value,
-            grid: document.getElementById('dlGrid').checked,
+            grid: dlGridEl.checked,
+            gridColor: document.getElementById('dlGridColor').value,
+            gridOpacity: (+dlOpacityEl.value || 60) / 100,
             rows: document.getElementById('dlRows').checked,
-            cols: document.getElementById('dlCols').checked,
-            cell: (+document.getElementById('dlSize').value) || 26
+            cols: document.getElementById('dlCols').checked
           });
           closeDesignDownload();
         };
