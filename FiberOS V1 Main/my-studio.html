@@ -13,7 +13,7 @@
       <a class="brand" href="index.html">FiberOS</a>
       <nav class="nav">
         <a href="index.html">Home</a>
-        <a href="my-yarns.html">My Yarns</a>
+        <a class="active" href="my-studio.html">My Studio</a>
       </nav>
       <div class="spacer"></div>
       <button class="btn ghost small js-help" type="button">Help</button>
@@ -26,36 +26,87 @@
       <div>
         <span class="pill">My Studio</span>
         <h1>Your saved work</h1>
-        <div class="sub">Your saved designs and color palettes, all in one place.</div>
+        <div class="sub">Your designs, palettes, and yarn library — all in one place.</div>
       </div>
       <div class="row">
-        <input id="search" placeholder="Search projects" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)">
-        <select id="sort" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)">
-          <option value="recent">Recently edited</option>
-          <option value="name">Name</option>
-          <option value="size">Largest chart</option>
-        </select>
         <button class="btn secondary" id="backupBtn" title="Download one file with all your designs, palettes, and yarn — your safety net against losing work">Back up all</button>
         <button class="btn ghost" id="restoreBtn" title="Restore everything from a backup file">Restore</button>
         <input id="restoreInput" type="file" accept="application/json,.json" style="display:none">
       </div>
     </section>
 
-    <div class="fx-section-head">
-      <h2>Saved designs</h2>
+    <div class="ms-tabs" id="msTabs">
+      <button class="ms-tab active" data-pane="designs">Designs <span class="ms-count" id="cntDesigns"></span></button>
+      <button class="ms-tab" data-pane="palettes">Palettes <span class="ms-count" id="cntPalettes"></span></button>
+      <button class="ms-tab" data-pane="yarns">Yarn Library <span class="ms-count" id="cntYarns"></span></button>
     </div>
-    <div class="tabs">
-      <button class="tab active" data-filter="all">All</button>
-      <button class="tab" data-filter="favorite">Favorites</button>
-      <button class="tab" data-filter="private">Private</button>
-      <button class="tab" data-filter="public">Public</button>
-    </div>
-    <section id="projects" class="project-grid"></section>
 
-    <div class="fx-section-head">
-      <h2>Saved palettes</h2>
-    </div>
-    <section id="palettes" class="project-grid"></section>
+    <!-- DESIGNS -->
+    <section class="ms-pane" id="paneDesigns">
+      <div class="row" style="margin-bottom:12px;gap:10px;flex-wrap:wrap">
+        <input id="search" placeholder="Search designs" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)">
+        <select id="sort" style="padding:12px;border:1px solid var(--line);border-radius:12px;background:var(--surface);color:var(--ink)">
+          <option value="recent">Recently edited</option>
+          <option value="name">Name</option>
+          <option value="size">Largest chart</option>
+        </select>
+      </div>
+      <div class="tabs">
+        <button class="tab active" data-filter="all">All</button>
+        <button class="tab" data-filter="progress">In progress</button>
+        <button class="tab" data-filter="favorite">Favorites</button>
+        <button class="tab" data-filter="private">Private</button>
+        <button class="tab" data-filter="public">Public</button>
+      </div>
+      <section id="projects" class="project-grid"></section>
+    </section>
+
+    <!-- PALETTES -->
+    <section class="ms-pane hidden" id="panePalettes">
+      <section id="palettes" class="project-grid"></section>
+    </section>
+
+    <!-- YARN LIBRARY -->
+    <section class="ms-pane hidden" id="paneYarns">
+      <div class="sub" style="margin-bottom:14px">The yarn you own or want to buy. Palette Studio can match colors to just these, so recommendations only use yarn you can actually get.</div>
+      <div class="grid" style="grid-template-columns:380px minmax(0,1fr);gap:22px;align-items:start">
+        <aside class="card">
+          <div class="my-tabs">
+            <button class="my-tab active" data-tab="lib">From the library</button>
+            <button class="my-tab" data-tab="own">Add your own</button>
+          </div>
+          <div id="tabLib">
+            <div class="sub" style="margin-bottom:8px">Search the full yarn database and add what you own.</div>
+            <input id="libSearch" type="text" placeholder="Search by color, brand, or line…" style="width:100%;padding:11px 12px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)">
+            <div class="my-results" id="libResults"><div class="sub">Type to search 14,000+ colorways.</div></div>
+          </div>
+          <div id="tabOwn" class="hidden">
+            <div class="sub" style="margin-bottom:8px">Not in the database? Add it by hand. Only a name and color are required.</div>
+            <div class="field"><label for="ownName">Color name *</label><input id="ownName" type="text" placeholder="e.g. Sage heather"></div>
+            <div class="field" style="margin-top:10px"><label for="ownColor">Color *</label><input id="ownColor" type="color" value="#6f8f6a" style="width:100%;height:44px"><div class="swatch-preview" id="ownPreview"></div></div>
+            <div class="field" style="margin-top:10px"><label for="ownBrand">Brand</label><input id="ownBrand" type="text" placeholder="e.g. Lion Brand"></div>
+            <div class="field" style="margin-top:10px"><label for="ownLine">Yarn line</label><input id="ownLine" type="text" placeholder="e.g. Wool-Ease"></div>
+            <div class="field" style="margin-top:10px"><label for="ownWeight">Weight</label><select id="ownWeight"><option value="">Not sure</option></select></div>
+            <button class="btn" id="ownAdd" style="width:100%;margin-top:14px">Add to my yarns</button>
+            <div class="sub" id="ownMsg" style="margin-top:8px;min-height:18px"></div>
+          </div>
+        </aside>
+        <section>
+          <div class="my-toolbar">
+            <h3 style="margin:0" id="stashTitle">Your yarns</h3>
+            <span class="spacer" style="flex:1"></span>
+            <input id="stashSearch" class="grow" type="text" placeholder="Filter your yarns…" style="padding:9px 11px;border:1px solid var(--line);border-radius:10px;background:var(--surface);color:var(--ink)">
+            <label class="row" style="gap:6px;font-weight:700;font-size:.85rem"><input type="checkbox" id="groupWeight"> Group by weight</label>
+          </div>
+          <div class="my-toolbar">
+            <button class="btn secondary small" id="exportBtn">Export yarns</button>
+            <label class="btn secondary small" style="cursor:pointer">Import yarns<input id="importInput" type="file" accept="application/json,.json" hidden></label>
+            <button class="btn ghost small" id="clearBtn">Clear all</button>
+          </div>
+          <div id="stashList" class="my-list"><div class="my-empty">No yarns yet. Add from the library or add your own.</div></div>
+        </section>
+      </div>
+    </section>
   </main>
 
   <footer class="fx-footer">
@@ -131,6 +182,36 @@
     .ap-previewwrap{display:flex;justify-content:center}
     .ap-previewwrap canvas{border:1px solid var(--line);border-radius:12px;background:#fff;max-width:100%;height:auto}
   </style>
+  <style>
+    .ms-tabs{display:flex;gap:8px;margin:6px 0 18px;flex-wrap:wrap}
+    .ms-tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:11px 18px;border-radius:999px;cursor:pointer;font-weight:800;font-size:1rem}
+    .ms-tab.active{background:var(--aub);color:#fff;border-color:var(--aub)}
+    .ms-count{opacity:.75;font-weight:700;margin-left:2px}
+    .ms-pane.hidden{display:none}
+    .ms-progress{color:var(--aub);font-weight:800;font-size:.82rem;margin:2px 0 0}
+    .my-tabs{display:flex;gap:8px;margin-bottom:14px}
+    .my-tab{border:1px solid var(--line);background:var(--surface);color:var(--ink);padding:9px 15px;border-radius:999px;cursor:pointer;font-weight:800}
+    .my-tab.active{background:var(--aub);color:#fff;border-color:var(--aub)}
+    .my-results{margin-top:12px;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+    .my-pick{display:flex;align-items:center;gap:10px;padding:8px;border:1px solid var(--line);border-radius:12px;background:var(--surface)}
+    .my-pick .sw{width:34px;height:34px;border-radius:8px;flex:none;border:1px solid rgba(0,0,0,.2)}
+    .my-pick .info{flex:1;min-width:0}
+    .my-pick .info strong{display:block;line-height:1.15}
+    .my-pick .info small{color:var(--muted)}
+    .my-list{display:flex;flex-direction:column;gap:8px}
+    .my-group-h{font-weight:800;color:var(--muted);text-transform:uppercase;letter-spacing:.04em;font-size:.72rem;margin:14px 0 4px}
+    .my-card{display:flex;align-items:center;gap:12px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;background:var(--surface)}
+    .my-card .sw{width:44px;height:44px;border-radius:10px;flex:none;border:1px solid rgba(0,0,0,.2)}
+    .my-card .info{flex:1;min-width:0}
+    .my-card .info strong{display:block}
+    .my-card .info small{color:var(--muted)}
+    .my-tag{font-size:.66rem;font-weight:800;text-transform:uppercase;letter-spacing:.03em;padding:2px 7px;border-radius:999px;background:var(--surface2);color:var(--muted)}
+    .my-tag.db{color:var(--aub)}
+    .my-empty{padding:40px;text-align:center;border:2px dashed var(--line);border-radius:var(--r);color:var(--muted)}
+    .my-toolbar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:10px}
+    .my-toolbar .grow{flex:1;min-width:160px}
+    .swatch-preview{width:100%;height:40px;border-radius:10px;border:1px solid var(--line);margin-top:6px}
+  </style>
   <script src="shared.js"></script>
   <script src="app/sidemenu.js"></script>
   <script src="app/help.js"></script>
@@ -151,6 +232,8 @@
   <script src="app/project-schema.js"></script>
   <script src="app/project-migrate.js"></script>
   <script src="app/project-repository.js"></script>
+  <script src="app/my-yarns.js"></script>
+  <script src="yarn-api.js"></script>
   <script>
     var filter = 'all';
     var root = document.getElementById('projects');
@@ -362,6 +445,13 @@
       r.readAsText(file);
     }
 
+    // How far someone has worked a design in Live Studio (row 1 = not started).
+    function liveProgressRow(id) {
+      var raw; try { raw = localStorage.getItem('fiberos.live.' + id); } catch (e) { return 1; }
+      if (!raw) return 1;
+      try { var v = JSON.parse(raw); if (v && typeof v === 'object' && v.row) return v.row | 0; if (typeof v === 'number') return v | 0; } catch (e) {}
+      var n = parseInt(raw, 10); return isNaN(n) ? 1 : n;
+    }
     function render() {
       var list = Repo.getProjects();
       var q = document.getElementById('search').value.toLowerCase();
@@ -371,6 +461,7 @@
       list = list.filter(function (p) { return (p.name || '').toLowerCase().indexOf(q) >= 0; });
       if (filter === 'favorite') list = list.filter(function (p) { return p.favorite; });
       if (filter === 'private' || filter === 'public') list = list.filter(function (p) { return p.visibility === filter; });
+      if (filter === 'progress') list = list.filter(function (p) { return liveProgressRow(p.id) > 1; });
 
       var sort = document.getElementById('sort').value;
       if (sort === 'name') list.sort(function (a, b) { return (a.name || '').localeCompare(b.name || ''); });
@@ -380,6 +471,9 @@
       if (!list.length) { root.innerHTML = '<div class="empty">No matching projects.</div>'; return; }
 
       list.forEach(function (p) {
+        var prow = liveProgressRow(p.id);
+        var totalRows = (v.grid(p) || []).length;
+        var inProg = prow > 1 && totalRows > 0;
         var card = document.createElement('article');
         card.className = 'card project';
         card.innerHTML =
@@ -389,9 +483,10 @@
             '<button class="btn ghost small fav" title="Favorite">' + (p.favorite ? '★' : '☆') + '</button>' +
           '</div>' +
           '<div class="meta"><span>' + v.stitches(p) + ' × ' + v.rows(p) + '</span><span>' + esc(p.visibility || 'private') + '</span></div>' +
+          (inProg ? '<p class="ms-progress">In progress · Row ' + prow + ' of ' + totalRows + '</p>' : '') +
           '<p class="muted">' + esc(v.notes(p) || 'No notes yet.') + '</p>' +
           '<div class="row">' +
-            '<button class="btn small live">▶ Work on this</button>' +
+            '<button class="btn small live">' + (inProg ? ('Resume · Row ' + prow) : '▶ Work on this') + '</button>' +
             '<button class="btn secondary small open">Open in Studio</button>' +
             '<button class="btn secondary small packet">Pattern packet</button>' +
             '<button class="btn ghost small rename">Rename</button>' +
@@ -422,6 +517,7 @@
         card.querySelector('.fav').onclick = function () { Repo.toggleFavorite(p.id); render(); };
         root.appendChild(card);
       });
+      if (window.msUpdateCounts) window.msUpdateCounts();
     }
 
     document.getElementById('search').oninput = render;
@@ -649,6 +745,124 @@
       apOverlay.classList.remove('show'); render(); renderPalettes();
       alert('Created "'+copy.name+'" in Saved designs with your palette colors.');
     }
+  </script>
+  <script>
+  (function () {
+    function $(id) { return document.getElementById(id); }
+    function esc(x) { return String(x == null ? '' : x).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
+    var My = window.FiberOSMyYarns, Repo = window.FiberOSRepo, Pal = window.FiberOSPalettes;
+
+    // ---- Tab counts ----
+    window.msUpdateCounts = function () {
+      try {
+        var designs = Repo ? Repo.getProjects().filter(function (p) { return !p.archived; }).length : 0;
+        var pals = Pal ? Pal.list().length : 0;
+        var yn = My ? My.count() : 0;
+        if ($('cntDesigns')) $('cntDesigns').textContent = designs ? '(' + designs + ')' : '';
+        if ($('cntPalettes')) $('cntPalettes').textContent = pals ? '(' + pals + ')' : '';
+        if ($('cntYarns')) $('cntYarns').textContent = yn ? '(' + yn + ')' : '';
+      } catch (e) {}
+    };
+
+    // ---- Top-level tabs (Designs / Palettes / Yarn Library), deep-linkable via #hash ----
+    var panes = { designs: 'paneDesigns', palettes: 'panePalettes', yarns: 'paneYarns' };
+    function showPane(name) {
+      if (!panes[name]) name = 'designs';
+      document.querySelectorAll('.ms-tab').forEach(function (b) { b.classList.toggle('active', b.dataset.pane === name); });
+      Object.keys(panes).forEach(function (k) { var el = $(panes[k]); if (el) el.classList.toggle('hidden', k !== name); });
+      try { history.replaceState(null, '', '#' + name); } catch (e) {}
+      window.msUpdateCounts();
+    }
+    document.querySelectorAll('.ms-tab').forEach(function (b) { b.onclick = function () { showPane(b.dataset.pane); }; });
+    var initial = (location.hash || '').replace('#', '');
+    showPane(panes[initial] ? initial : 'designs');
+
+    // ---- Yarn Library (moved here from the old My Yarns page) ----
+    if (My) {
+      var yarns = [], yarnsReady = false;
+      if (window.FiberOSYarnAPI) {
+        window.FiberOSYarnAPI.load()
+          .then(function (d) { yarns = d.colorways.filter(function (y) { return y.hex && !y.unavailable; }); yarnsReady = true; })
+          .catch(function () { var lr = $('libResults'); if (lr) lr.innerHTML = '<div class="sub">Yarn database could not be loaded.</div>'; });
+      }
+      document.querySelectorAll('#paneYarns .my-tab').forEach(function (b) {
+        b.onclick = function () {
+          document.querySelectorAll('#paneYarns .my-tab').forEach(function (x) { x.classList.toggle('active', x === b); });
+          $('tabLib').classList.toggle('hidden', b.dataset.tab !== 'lib');
+          $('tabOwn').classList.toggle('hidden', b.dataset.tab !== 'own');
+        };
+      });
+      var libTimer;
+      $('libSearch').oninput = function () { clearTimeout(libTimer); libTimer = setTimeout(runLibSearch, 90); };
+      function runLibSearch() {
+        var box = $('libResults');
+        if (!yarnsReady) { box.innerHTML = '<div class="sub">Loading yarn database…</div>'; setTimeout(runLibSearch, 200); return; }
+        var q = $('libSearch').value.trim().toLowerCase();
+        if (!q) { box.innerHTML = '<div class="sub">Type to search 14,000+ colorways.</div>'; return; }
+        var rows = yarns.filter(function (y) { return (y.name + ' ' + y.brandName + ' ' + (y.yarnName || '')).toLowerCase().indexOf(q) >= 0; }).slice(0, 40);
+        if (!rows.length) { box.innerHTML = '<div class="sub">No colorways match that search.</div>'; return; }
+        box.innerHTML = '';
+        rows.forEach(function (y) {
+          var owned = My.has(y);
+          var el = document.createElement('div'); el.className = 'my-pick';
+          el.innerHTML = '<span class="sw" style="background:' + y.hex + '"></span>' +
+            '<div class="info"><strong>' + esc(y.name) + '</strong><small>' + esc(y.brandName) + (y.yarnName ? ' · ' + esc(y.yarnName) : '') + '</small></div>' +
+            '<button class="btn small' + (owned ? ' secondary' : '') + '"' + (owned ? ' disabled' : '') + '>' + (owned ? 'Added' : 'Add') + '</button>';
+          el.querySelector('button').onclick = function () { My.add({ name: y.name, brandName: y.brandName, yarnName: y.yarnName, hex: y.hex, weightId: y.yarnWeightId, source: 'db' }); runLibSearch(); renderStash(); };
+          box.appendChild(el);
+        });
+      }
+      if (window.FiberOSWeights) window.FiberOSWeights.names().forEach(function (n) { var o = document.createElement('option'); o.textContent = n; $('ownWeight').appendChild(o); });
+      $('ownColor').oninput = function () { $('ownPreview').style.background = this.value; };
+      $('ownPreview').style.background = $('ownColor').value;
+      $('ownAdd').onclick = function () {
+        var name = $('ownName').value.trim();
+        if (!name) { $('ownMsg').textContent = 'Please give it a name.'; return; }
+        var entry = My.add({ name: name, hex: $('ownColor').value, brandName: $('ownBrand').value.trim() || 'My yarn', yarnName: $('ownLine').value.trim(), weightId: $('ownWeight').value, source: 'manual' });
+        if (!entry) { $('ownMsg').textContent = 'You already have that one.'; return; }
+        $('ownMsg').textContent = 'Added “' + name + '”.';
+        $('ownName').value = ''; $('ownBrand').value = ''; $('ownLine').value = ''; $('ownWeight').value = '';
+        renderStash();
+      };
+      $('stashSearch').oninput = renderStash;
+      $('groupWeight').onchange = renderStash;
+      function weightLabel(w) { return window.FiberOSWeights ? window.FiberOSWeights.name(w) : ''; }
+      function renderStash() {
+        var list = My.list();
+        $('stashTitle').textContent = 'Your yarns (' + list.length + ')';
+        var q = $('stashSearch').value.trim().toLowerCase();
+        if (q) list = list.filter(function (y) { return (y.name + ' ' + y.brandName + ' ' + (y.yarnName || '')).toLowerCase().indexOf(q) >= 0; });
+        var box = $('stashList');
+        if (!list.length) { box.innerHTML = '<div class="my-empty">' + (q ? 'No yarns match that filter.' : 'No yarns yet. Add from the library or add your own.') + '</div>'; window.msUpdateCounts(); return; }
+        box.innerHTML = '';
+        function card(y) {
+          var wl = weightLabel(y.weightId);
+          var el = document.createElement('div'); el.className = 'my-card';
+          el.innerHTML = '<span class="sw" style="background:' + y.hex + '"></span>' +
+            '<div class="info"><strong>' + esc(y.name) + '</strong><small>' + esc(y.brandName) + (y.yarnName ? ' · ' + esc(y.yarnName) : '') + (wl && wl !== 'Unspecified' ? ' · ' + esc(wl) : '') + ' · ' + esc(y.hex) + '</small></div>' +
+            '<span class="my-tag' + (y.source === 'db' ? ' db' : '') + '">' + (y.source === 'db' ? 'Library' : 'Custom') + '</span>' +
+            '<button class="btn ghost small">Remove</button>';
+          el.querySelector('button').onclick = function () { My.remove(y.id); renderStash(); runLibSearch(); };
+          return el;
+        }
+        if ($('groupWeight').checked && window.FiberOSWeights) {
+          var groups = {};
+          list.forEach(function (y) { var g = weightLabel(y.weightId); (groups[g] = groups[g] || []).push(y); });
+          Object.keys(groups).sort(function (a, b) { return window.FiberOSWeights.rank(a) - window.FiberOSWeights.rank(b); }).forEach(function (g) {
+            var h = document.createElement('div'); h.className = 'my-group-h'; h.textContent = g + ' (' + groups[g].length + ')'; box.appendChild(h);
+            groups[g].forEach(function (y) { box.appendChild(card(y)); });
+          });
+        } else { list.forEach(function (y) { box.appendChild(card(y)); }); }
+        window.msUpdateCounts();
+      }
+      $('exportBtn').onclick = function () { var blob = new Blob([My.exportJSON()], { type: 'application/json' }); var a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = 'fiberos-my-yarns.json'; a.click(); URL.revokeObjectURL(a.href); };
+      $('importInput').onchange = function (e) { var f = e.target.files[0]; if (!f) return; var r = new FileReader(); r.onload = function () { try { var res = My.importJSON(r.result, { merge: true }); alert('Imported ' + res.added + ' yarn' + (res.added === 1 ? '' : 's') + (res.skipped ? (' · skipped ' + res.skipped + ' already-present or invalid') : '') + '.'); renderStash(); runLibSearch(); } catch (err) { alert(err.message || 'Could not import that file.'); } }; r.readAsText(f); e.target.value = ''; };
+      $('clearBtn').onclick = function () { if (!My.count()) return; if (confirm('Remove all ' + My.count() + ' yarns from your stash? Export a backup first if you want to keep them.')) { My.clear(); renderStash(); runLibSearch(); } };
+      My.onChange(function () { renderStash(); });
+      renderStash();
+    }
+    window.msUpdateCounts();
+  })();
   </script>
 </body>
 </html>
