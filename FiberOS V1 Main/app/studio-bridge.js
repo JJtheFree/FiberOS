@@ -200,6 +200,7 @@
         if (typeof showToast === 'function') showToast('Create a chart before saving.');
         return;
       }
+      if (window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save your design.')) return;
       var nameEl = $('saveName'), visEl = $('visibilitySelect'), noteEl = $('saveNote');
       var p = buildV1({
         name: nameEl && nameEl.value,
@@ -236,6 +237,7 @@
         if (typeof showToast === 'function') showToast('Create a chart before working on it.');
         return;
       }
+      if (window.FiberOSAuth && window.FiberOSAuth.requireSignIn && !window.FiberOSAuth.requireSignIn('Sign in to save your design and start working.')) return;
       var alreadySaved = isInLibrary(window.__fiberosCurrentProjectId);
       var suggested = ($('saveName') && $('saveName').value.trim())
         || (state.sourceFileName ? String(state.sourceFileName).replace(/\.[^.]+$/, '').trim() : '')

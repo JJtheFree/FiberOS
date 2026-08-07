@@ -18,7 +18,7 @@
   var SUPABASE_KEY = 'sb_publishable_M6GbiyU1zjJQVpW_HSKe2Q_naa3smw0';
   var CDN = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.js';
 
-  var sb = null, user = null, synced = false, lastHash = null, statusEl = null;
+  var sb = null, user = null, synced = false, lastHash = null, statusEl = null, authReady = false;
 
   // ---- local library helpers ----
   var K_DESIGNS = 'fiberos_v1_projects', K_PAL = 'fiberos.palettes', K_YARN = 'fiberos.myYarns';
@@ -157,6 +157,14 @@
   }
   function openModal() { renderModalBody(); modal.style.display = 'flex'; }
   function closeModal() { if (modal) modal.style.display = 'none'; }
+  // Saving requires an account. Returns true if it's OK to proceed (signed in, or auth
+  // isn't ready yet so we don't wrongly block). If signed out, opens the sign-in modal.
+  function requireSignIn(msg) {
+    if (!authReady || user) return true;
+    openModal();
+    if (statusEl) statusEl.textContent = msg || 'Please sign in to save your work.';
+    return false;
+  }
   function status(msg) { if (statusEl) statusEl.textContent = msg || ''; }
   function esc(s) { return String(s == null ? '' : s).replace(/[&<>"]/g, function (c) { return ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' })[c]; }); }
   function renderUI() {
@@ -177,12 +185,12 @@
       sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, { auth: { persistSession: true, autoRefreshToken: true, detectSessionInUrl: true } });
     } catch (e) { return; }
     injectUI();
-    sb.auth.getSession().then(function (res) { var s = res && res.data && res.data.session; setUser(s ? s.user : null, false); });
-    sb.auth.onAuthStateChange(function (event, session) { setUser(session ? session.user : null, event === 'SIGNED_IN'); });
+    sb.auth.getSession().then(function (res) { var s = res && res.data && res.data.session; authReady = true; setUser(s ? s.user : null, false); });
+    sb.auth.onAuthStateChange(function (event, session) { authReady = true; setUser(session ? session.user : null, event === 'SIGNED_IN'); });
     setInterval(function () { maybePush(false); }, 4000);
     document.addEventListener('visibilitychange', function () { if (document.hidden) maybePush(true); });
     window.addEventListener('pagehide', function () { maybePush(true); });
-    window.FiberOSAuth = { user: function () { return user; }, signOut: function () { sb.auth.signOut(); }, open: openModal };
+    window.FiberOSAuth = { user: function () { return user; }, signOut: function () { sb.auth.signOut(); }, open: openModal, requireSignIn: requireSignIn };
   }
   function loadSDK() {
     if (window.supabase && window.supabase.createClient) { boot(); return; }
