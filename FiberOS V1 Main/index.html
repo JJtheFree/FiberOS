@@ -29,8 +29,8 @@
       filter:drop-shadow(0 14px 18px rgba(0,0,0,.42))}
     /* the textured yarn thread that UNSPOOLS downward as you scroll toward the choices.
        background-size is width×height: the fixed height keeps the squiggle wavelength tight. */
-    .lp-trail{position:absolute;top:46vh;left:50%;width:58vmin;height:120vh;margin-left:-29vmin;
-      background:url('landing/trail.png') top center/58vmin 42vmin repeat-y;z-index:2;pointer-events:none;opacity:1;
+    .lp-trail{position:absolute;top:46vh;left:50%;width:68vmin;height:120vh;margin-left:-34vmin;
+      background:url('landing/trail.png') top center/68vmin 46vmin repeat-y;z-index:2;pointer-events:none;opacity:1;
       clip-path:inset(0 0 70% 0);-webkit-clip-path:inset(0 0 70% 0);transition:clip-path .06s linear}
     /* soft contact shadow so the basket rests on the platform, not floating */
     .lp-shadow{position:absolute;left:50%;bottom:20vh;width:min(56vw,620px);height:60px;transform:translateX(-50%);
@@ -175,7 +175,7 @@
         var prog = Math.min(1, Math.max(0, y / (vh * 0.72)));
         var reveal = 0.30 + prog * 0.70;                 // a soft drape at rest, fully unspooled near the cards
         trail.style.clipPath = trail.style.webkitClipPath = 'inset(0 0 ' + ((1 - reveal) * 100).toFixed(1) + '% 0)';
-        trail.style.marginLeft = (-29 + mx * 0.6).toFixed(2) + 'vmin';
+        trail.style.marginLeft = (-34 + mx * 0.6).toFixed(2) + 'vmin';
       }
       if(cue) cue.style.opacity = String(Math.max(0, 1 - y / (vh * 0.4)));
     }
