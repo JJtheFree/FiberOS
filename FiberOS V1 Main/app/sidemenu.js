@@ -57,6 +57,14 @@
     '</div>';
   document.body.appendChild(wrap);
 
+  // Swap the panel art to the chocolate-toned version in dark mode, and keep it in
+  // sync if the user toggles the theme while the menu is open.
+  var panelImg = wrap.querySelector('.fx-sidemenu-img');
+  function panelSrc(){ return document.documentElement.getAttribute('data-theme') === 'dark' ? 'landing/sidemenu-panel-dark.png' : 'landing/sidemenu-panel.png'; }
+  function syncPanel(){ if(panelImg && panelImg.getAttribute('src') !== panelSrc()) panelImg.setAttribute('src', panelSrc()); }
+  syncPanel();
+  try { new MutationObserver(syncPanel).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] }); } catch(e) {}
+
   var toggle = wrap.querySelector('.fx-sidemenu-toggle');
   // Pages with their own left/right work panels (the studios) opt into "compact":
   // the menu stays a small tab and only opens when asked, so it never covers tools.
