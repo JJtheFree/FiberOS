@@ -37,9 +37,29 @@
   // -------------------------------------------------------------------------
   // Build a full v1 project from the live studio state + save-dialog inputs.
   // -------------------------------------------------------------------------
+  // Merge stray near-duplicate colors (e.g. a tiny second orange the converter left behind)
+  // into their main color, so the chart's true color count is honest everywhere.
+  function consolidateColors(grid) {
+    if (!grid || !grid.length) return grid;
+    function up(h) { return String(h).toUpperCase(); }
+    function rgb(h) { h = up(h).replace('#', ''); return [parseInt(h.slice(0, 2), 16) || 0, parseInt(h.slice(2, 4), 16) || 0, parseInt(h.slice(4, 6), 16) || 0]; }
+    function dist(a, b) { var x = rgb(a), y = rgb(b); return Math.hypot(x[0] - y[0], x[1] - y[1], x[2] - y[2]); }
+    var cc = {}; grid.forEach(function (r) { r.forEach(function (h) { var k = up(h); cc[k] = (cc[k] || 0) + 1; }); });
+    var colors = Object.keys(cc).sort(function (a, b) { return cc[b] - cc[a]; });
+    if (colors.length < 2) return grid;
+    var TH = 34, majors = [], map = {};
+    colors.forEach(function (hex) {
+      var near = null, nd = Infinity;
+      majors.forEach(function (m) { var d = dist(hex, m); if (d < nd) { nd = d; near = m; } });
+      if (near && nd < TH) { map[hex] = near; } else { majors.push(hex); map[hex] = hex; }
+    });
+    if (!colors.some(function (h) { return map[h] !== h; })) return grid;
+    return grid.map(function (r) { return r.map(function (h) { return map[up(h)] || h; }); });
+  }
+
   function buildV1(meta) {
     meta = meta || {};
-    var grid = state.gridData || [];
+    var grid = consolidateColors(state.gridData || []);
 
     // Count colors, most-used first, and attach any assigned yarn from state.yarnMatches.
     var counts = {};
