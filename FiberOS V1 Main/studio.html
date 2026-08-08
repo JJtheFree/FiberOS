@@ -483,7 +483,7 @@
 <div class="app">
   <header>
     <div class="header-row">
-      <a class="brand" href="index.html" aria-label="Return to FiberOS Pattern Library">
+      <a class="brand" id="brandHome" href="index.html" aria-label="Return to FiberOS Pattern Library">
         <div class="brand-badge"><svg class="ui-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="12" r="7"/><path d="M6 8c3 0 7 2 10 6M5 12c4-1 8 1 11 4M8 6c1 4 5 8 10 9M17 16c2 1 3 2 3 4"/></svg></div>
         <div>
           <h1>FiberOS <span>— Tapestry Studio</span></h1>
@@ -2250,6 +2250,7 @@
     // the user approved — even if they paint over all of a color, it stays selectable
     // (they can clear the whole chart and re-color from their own picked colors).
     state.confirmedPalette = [...getPaletteCounts().map(([hex]) => hex), ...(state.manualColors || [])];
+    state._cleanupDismissed = false; // fresh design: allow the tidy-colors nudge again
     state.history=[]; state.historyIndex=-1;
     state.manualEditsMade=false;
     pushHistory();
@@ -2260,6 +2261,7 @@
     renderReviewPalette();
     
     setScreen('editor');
+    try{ updateCleanupChip(); }catch(e){}
     closeModal('detailModalWrap');
     showToast('Grid opened in the editor.');
   }
@@ -2701,7 +2703,7 @@
     renderReviewPalette();
     renderReviewComparison();
     renderVariantPreviews();
-    
+    try{ updateCleanupChip(); }catch(e){}
   }
 
   function renderPalette(){
@@ -2948,14 +2950,32 @@
       boxes.forEach(b=>{ if(b.checked){ const from=b.dataset.stray, to=b.dataset.target; if(replaceColorEverywhere(from,to)){ merged++; state.confirmedPalette=(state.confirmedPalette||[]).filter(h=>String(h).toUpperCase()!==String(from).toUpperCase()); } } });
       closeModal('colorCleanupModal');
       if(merged) refreshColorChangeViews();
+      updateCleanupChip();
       const go=_cleanupProceed; _cleanupProceed=null; if(go) go();
     });
     if(keepBtn) keepBtn.addEventListener('click', ()=>{
+      state._cleanupDismissed = true; // remember this choice for the design; stop nagging
       closeModal('colorCleanupModal');
+      updateCleanupChip();
       const go=_cleanupProceed; _cleanupProceed=null; if(go) go();
     });
   }
   wireColorCleanupButtons();
+  // A quiet nudge in the editor color key: only shows when real near-duplicates exist.
+  function updateCleanupChip(){
+    if(!els.paletteList) return;
+    let chip = document.getElementById('mergeChip');
+    const n = (state.currentScreen === 'editor' && !state._cleanupDismissed) ? findMergeSuggestions().length : 0;
+    if(!n){ if(chip) chip.remove(); return; }
+    if(!chip){
+      chip = document.createElement('button');
+      chip.id = 'mergeChip'; chip.type = 'button'; chip.className = 'btn secondary small';
+      chip.style.cssText = 'display:block;width:100%;text-align:left;margin:0 0 10px';
+      chip.addEventListener('click', () => { openColorCleanup(findMergeSuggestions(), null); });
+      els.paletteList.parentNode.insertBefore(chip, els.paletteList);
+    }
+    chip.textContent = 'Merge ' + n + ' similar color' + (n>1?'s':'') + ' →';
+  }
 
   function saveProject(){
     const name = els.saveName.value.trim() || 'Untitled project';
@@ -3244,7 +3264,7 @@
   }));
 
   function openPacketBuilder(skipCleanup){
-    if(!skipCleanup){
+    if(!skipCleanup && !state._cleanupDismissed){
       const s = findMergeSuggestions();
       if(s.length){ openColorCleanup(s, () => openPacketBuilder(true)); return; }
     }
@@ -3252,6 +3272,14 @@
   }
 
   document.getElementById('toPacketBtn')?.addEventListener('click', () => openPacketBuilder());
+  // Logo always goes home, but guard against walking away from unsaved editor work.
+  document.getElementById('brandHome')?.addEventListener('click', function(e){
+    if(state.currentScreen === 'editor' && state.manualEditsMade){
+      if(!window.confirm('Leave the editor and go home? Save your design first if you want to keep your latest changes.')){
+        e.preventDefault();
+      }
+    }
+  });
   document.getElementById('toLiveBtn')?.addEventListener('click', () => {
     if(saveActiveProjectForPacket()){ try{ sessionStorage.setItem('fiberos_live_from','editor'); }catch(e){} location.href='live-studio.html'; }
   });
@@ -3428,6 +3456,7 @@
     if(!btn) return;
     btn.addEventListener('click', function(e){
       if(btn._cleanupOk){ btn._cleanupOk = false; return; }
+      if(state._cleanupDismissed) return;
       const s = findMergeSuggestions();
       if(s.length){
         e.stopImmediatePropagation(); e.preventDefault();
