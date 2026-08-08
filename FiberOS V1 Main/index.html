@@ -23,9 +23,14 @@
     .lp-layer{position:absolute;inset:-8%;background-repeat:no-repeat;background-position:center;will-change:transform}
     .lp-bg{background-color:#0e1a12;background-image:linear-gradient(180deg, rgba(12,22,16,.62), rgba(12,22,16,.72) 60%, var(--lp-floor) 100%), url('landing/bg.png');background-size:cover}
     .lp-basket{background-image:url('landing/basket.png');background-size:contain;background-position:center 42%}
-    /* the falling yarn ball — fixed so it isn't clipped; z-index 2 keeps it BEHIND the buttons (z-index 3) */
-    .lp-ball{position:fixed;top:14vh;left:50%;width:56vmin;height:56vmin;margin-left:-28vmin;
-      background:url('landing/yarnball.png') center/contain no-repeat;z-index:2;will-change:transform,opacity;pointer-events:none}
+    /* the yarn ball now RESTS in the basket (no rolling or falling). Soft cursor parallax only. */
+    .lp-ball{position:absolute;top:23vh;left:50%;width:40vmin;height:40vmin;margin-left:-20vmin;
+      background:url('landing/yarnball-clean.png') center/contain no-repeat;z-index:3;will-change:transform;pointer-events:none;
+      filter:drop-shadow(0 18px 26px rgba(0,0,0,.42))}
+    /* the textured yarn thread that UNSPOOLS downward as you scroll toward the choices */
+    .lp-trail{position:absolute;top:44vh;left:50%;width:24vmin;height:120vh;margin-left:-12vmin;
+      background:url('landing/trail.png') top center/24vmin auto repeat-y;z-index:2;pointer-events:none;opacity:.95;
+      clip-path:inset(0 0 86% 0);-webkit-clip-path:inset(0 0 86% 0);transition:clip-path .06s linear}
     /* soft contact shadow so the basket rests on the platform, not floating */
     .lp-shadow{position:absolute;left:50%;bottom:20vh;width:min(56vw,620px);height:60px;transform:translateX(-50%);
       background:radial-gradient(ellipse at center, rgba(0,0,0,.5), rgba(0,0,0,0) 70%);filter:blur(3px);z-index:1}
@@ -97,7 +102,8 @@
       <div class="lp-ph"><div class="ball"></div><div class="tag">Placeholder — add art to the landing/ folder</div></div>
       <div class="lp-cue"><span>scroll down</span><span class="arrow">↓</span></div>
     </div>
-    <!-- the yarn ball lives outside the hero so it can roll out and fall behind the buttons -->
+    <!-- the ball rests in the basket; the thread unspools down toward the choices on scroll -->
+    <div class="lp-trail" id="lpTrail"></div>
     <div class="lp-ball" id="lpBall"></div>
 
     <section class="lp-floor">
@@ -152,23 +158,23 @@
     })();
 
     var mx = 0, my = 0;
+    var trail = document.getElementById('lpTrail');
     function apply(){
       var y = window.scrollY || 0;
       var vh = window.innerHeight || 800;
-      // hero layers drift for depth
+      // hero layers drift gently for depth (cursor + a little scroll)
       layers.forEach(function(el){
         var d = parseFloat(el.dataset.depth) || 0.1;
-        var mxp = mx * d * 44;
-        var tyy = y * (-d * 0.7) + my * d * 18;
-        el.style.transform = 'translate3d(' + mxp.toFixed(1) + 'px,' + tyy.toFixed(1) + 'px,0)';
+        el.style.transform = 'translate3d(' + (mx * d * 40).toFixed(1) + 'px,' + (y * (-d * 0.5) + my * d * 16).toFixed(1) + 'px,0)';
       });
-      // the yarn ball rolls out of the basket and falls, then hides behind the buttons.
-      if(ball){
-        var fall = Math.min(1, y / (vh * 0.8));
-        var bty = fall * vh * 0.40;
-        ball.style.transform = 'translate3d(' + (mx * 16).toFixed(1) + 'px,' + bty.toFixed(1) + 'px,0) rotate(' + (fall * 380).toFixed(0) + 'deg)';
-        // fade out as it drops behind the buttons so it never peeks below them
-        ball.style.opacity = fall < 0.5 ? '1' : String(Math.max(0, 1 - (fall - 0.5) / 0.35));
+      // the ball rests in the basket; only a soft parallax nudge toward the cursor
+      if(ball){ ball.style.transform = 'translate3d(' + (mx * 14).toFixed(1) + 'px,' + (my * 8).toFixed(1) + 'px,0)'; }
+      // the yarn thread unspools downward as you scroll toward the choices
+      if(trail){
+        var prog = Math.min(1, Math.max(0, y / (vh * 0.72)));
+        var reveal = 0.14 + prog * 0.86;                 // show a little at the top, full near the cards
+        trail.style.clipPath = trail.style.webkitClipPath = 'inset(0 0 ' + ((1 - reveal) * 100).toFixed(1) + '% 0)';
+        trail.style.marginLeft = (-12 + mx * 0.6).toFixed(2) + 'vmin';
       }
       if(cue) cue.style.opacity = String(Math.max(0, 1 - y / (vh * 0.4)));
     }
