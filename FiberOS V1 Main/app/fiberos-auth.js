@@ -144,20 +144,39 @@
     } else {
       title.textContent = 'Sign in to FiberOS';
       body.innerHTML =
-        '<p style="margin:0 0 14px;color:#555">Free, and optional. Sign in to sync your designs, palettes, and yarn across devices. No password needed.</p>' +
+        '<p style="margin:0 0 14px;color:#555">Free and optional. Sign in to sync your work across devices. No password — we email you a code you type right here, so you never leave what you’re working on.</p>' +
         '<label style="font-weight:700;font-size:.9rem">Email</label>' +
         '<input id="fosEmail" type="email" placeholder="you@example.com" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid rgba(0,0,0,.2);border-radius:10px;margin:6px 0 12px;font:inherit">' +
-        '<button id="fosMagic" style="width:100%;padding:12px;border-radius:12px;border:none;background:#2f8a5b;color:#fff;font-weight:800;cursor:pointer">Email me a sign-in link</button>' +
+        '<button id="fosSend" style="width:100%;padding:12px;border-radius:12px;border:none;background:#2f8a5b;color:#fff;font-weight:800;cursor:pointer">Email me a sign-in code</button>' +
+        '<div id="fosCodeWrap" style="display:none;margin-top:14px">' +
+          '<label style="font-weight:700;font-size:.9rem">Enter the code from your email</label>' +
+          '<input id="fosCode" inputmode="numeric" autocomplete="one-time-code" placeholder="Paste your code" style="width:100%;box-sizing:border-box;padding:11px;border:1px solid rgba(0,0,0,.2);border-radius:10px;margin:6px 0 10px;font:inherit;letter-spacing:.2em;font-size:1.1rem">' +
+          '<button id="fosVerify" style="width:100%;padding:12px;border-radius:12px;border:none;background:#2f8a5b;color:#fff;font-weight:800;cursor:pointer">Verify &amp; sign in</button>' +
+          '<div style="font-size:.8rem;color:#888;margin-top:8px">Typing the code keeps you on this page, right where you were. (The link in the email also works if you prefer.)</div>' +
+        '</div>' +
         '<div style="text-align:center;color:#999;margin:12px 0;font-size:.85rem">or</div>' +
         '<button id="fosGoogle" style="width:100%;padding:12px;border-radius:12px;border:1px solid rgba(0,0,0,.2);background:#fff;color:#222;font-weight:800;cursor:pointer">Continue with Google</button>' +
         '<div id="fosStatus" style="margin-top:12px;min-height:18px;color:#666;font-size:.9rem"></div>';
       statusEl = body.querySelector('#fosStatus');
-      body.querySelector('#fosMagic').onclick = function () {
+      body.querySelector('#fosSend').onclick = function () {
         var email = (body.querySelector('#fosEmail').value || '').trim();
         if (!email) { status('Enter your email first.'); return; }
-        status('Sending your link…');
+        status('Sending your code…');
         sb.auth.signInWithOtp({ email: email, options: { emailRedirectTo: location.origin + location.pathname } })
-          .then(function (r) { status(r.error ? (r.error.message || 'Could not send the link.') : 'Check your email for the sign-in link.'); });
+          .then(function (r) {
+            if (r.error) { status(r.error.message || 'Could not send the code.'); return; }
+            status('Check your email for a 6-digit code.');
+            body.querySelector('#fosCodeWrap').style.display = 'block';
+            try { body.querySelector('#fosCode').focus(); } catch (e) {}
+          });
+      };
+      body.querySelector('#fosVerify').onclick = function () {
+        var email = (body.querySelector('#fosEmail').value || '').trim();
+        var token = (body.querySelector('#fosCode').value || '').trim();
+        if (!token) { status('Enter the code from your email.'); return; }
+        status('Signing you in…');
+        sb.auth.verifyOtp({ email: email, token: token, type: 'email' })
+          .then(function (r) { if (r && r.error) status(r.error.message || 'That code did not work — double-check it or resend.'); });
       };
       body.querySelector('#fosGoogle').onclick = function () {
         status('Opening Google…');
@@ -202,6 +221,11 @@
     setInterval(function () { maybePush(false); }, 4000);
     document.addEventListener('visibilitychange', function () { if (document.hidden) maybePush(true); });
     window.addEventListener('pagehide', function () { maybePush(true); });
+    // If you signed in via the emailed link in another tab, pick it up when you return here.
+    window.addEventListener('focus', function () {
+      if (!sb) return;
+      sb.auth.getSession().then(function (res) { var s = res && res.data && res.data.session; if (s && (!user || user.id !== s.user.id)) { authReady = true; setUser(s.user, true); } });
+    });
     window.FiberOSAuth = { user: function () { return user; }, signOut: function () { sb.auth.signOut(); }, open: openModal, requireSignIn: requireSignIn };
   }
   function loadSDK() {
