@@ -10,9 +10,17 @@
   select,input{min-height:46px}.filters{border-top:1px solid #e9e0e7;padding-top:16px}.result-shell{max-height:650px;overflow:auto;padding-right:6px;scrollbar-gutter:stable}.result-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(235px,1fr));gap:12px}.color-card{border:1px solid #e5dce4;border-radius:14px;background:#fff;padding:13px;display:grid;grid-template-columns:46px 1fr;gap:12px}.color-card .big-swatch{width:46px;height:46px;border-radius:12px;border:1px solid #0002}.result-name{font-weight:800}.result-meta{font-size:.8rem;color:#766777;line-height:1.4}.empty-state{padding:30px;text-align:center;border:1px dashed #ddcfdd;border-radius:14px;color:#766777}.custom-builder{display:grid;gap:13px}.match-note{font-size:.82rem;color:#725f73}.footer-credit{margin-top:30px;padding:18px 0 8px;border-top:1px solid #ded8df;color:#817783;font-size:.72rem;line-height:1.45}.footer-credit p{margin:4px 0}.footer-credit a{color:#6e6470}.countline{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:12px}.inline-swatch{display:inline-block;width:15px;height:15px;border-radius:4px;vertical-align:-2px;margin-right:6px;border:1px solid #0002}.results-actions{display:flex;justify-content:center;padding-top:16px}.filter-help{margin:4px 0 0;color:#766777;font-size:.82rem}.field select:disabled{opacity:.6;cursor:not-allowed}.availability{font-size:.76rem;color:#887889;margin-left:auto;font-weight:600}.availability-badge{display:inline-flex;margin-top:6px;padding:3px 7px;border-radius:999px;background:#fff3dc;border:1px solid #efd4a5;color:#7a4d12;font-size:.72rem;font-weight:800}
   @media(max-width:760px){.hero{align-items:flex-start}.grid.two{grid-template-columns:1fr}.result-grid{grid-template-columns:1fr}.result-shell{max-height:560px}}
 </style>
+  <link rel="icon" href="favicon.ico" sizes="any">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-32.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-16.png" media="(prefers-color-scheme: light)">
+  <link rel="icon" type="image/png" sizes="32x32" href="favicon-dark-32.png" media="(prefers-color-scheme: dark)">
+  <link rel="icon" type="image/png" sizes="16x16" href="favicon-dark-16.png" media="(prefers-color-scheme: dark)">
+  <link rel="apple-touch-icon" href="apple-touch-icon.png">
+  <link rel="manifest" href="site.webmanifest">
+  <meta name="theme-color" content="#1C4A2E">
 </head>
 <body>
-<header class="top"><div class="topin"><a class="brand" href="index.html">FiberOS</a><nav class="nav"><a href="index.html">Home</a><a href="studio.html">Tapestry Studio</a><a class="active" href="palette-studio.html">Palette Studio</a></nav></div></header>
+<header class="top"><div class="topin"><a class="brand" href="index.html"><img src="favicon-32.png" alt="" width="26" height="26" style="vertical-align:-6px;margin-right:9px;border-radius:7px">FiberOS</a><nav class="nav"><a href="index.html">Home</a><a href="studio.html">Tapestry Studio</a><a class="active" href="palette-studio.html">Palette Studio</a></nav></div></header>
 <main class="wrap">
 <section class="hero"><div><span class="pill">FiberOS yarn library</span><h1>Find yarn colors</h1><div class="sub">Choose a color family, then narrow the results by brand, yarn weight, or yarn line.</div></div><button class="btn" id="openCustom">Add custom color</button></section>
 <div class="library-meta"><span class="meta-chip"><span id="statusDot" class="status-dot"></span><span id="libraryStatus">Loading yarn colors…</span></span><span class="meta-chip" id="recordCount">0 colorways</span><span class="meta-chip" id="lastUpdated">Loading…</span></div>
